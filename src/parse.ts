@@ -1,4 +1,5 @@
 import { getLogger } from "log4js";
+import parseSeq from "./parseSeq";
 import searchPattern from "./searchPattern";
 import SPCFile from "./SPCFile";
 
@@ -49,7 +50,7 @@ function parse(spc: Buffer, song: number = 10) {
     // 对一个 song 的解析
     const songEntry = spcFile.aram.readInt16LE(songPointers + ((song - 1) * 2));
     logger.info(`Using song ${song} at 0x${songEntry.toString(16)}`);
-    const paras = [];
+    const paras: number[] = [];
     let loop = 0;
     let paraOffset = 0;
     while (true) {
@@ -69,6 +70,16 @@ function parse(spc: Buffer, song: number = 10) {
             paraOffset += 2;
         }
     }
+
+    // 对 paras 的解析
+    const paraList: number[][] = [];
+    paras.forEach((e) => {
+        const para: number[] = [];
+        for (let i = 0; i < 8; i++) {
+            para.push(spcFile.aram.readInt16LE(e + i * 2));
+        }
+        paraList.push(para);
+    });
 }
 
 export default parse;
