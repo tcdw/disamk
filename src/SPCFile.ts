@@ -1,8 +1,8 @@
 class SPCFile {
-    mainHeader: Buffer;
-    extraHeader: Buffer;
-    aram: Buffer;
-    dsp: Buffer;
+    public mainHeader: Buffer;
+    public extraHeader: Buffer;
+    public aram: Buffer;
+    public dsp: Buffer;
     constructor(buffer: Buffer) {
         this.mainHeader = Buffer.alloc(0x100);
         this.extraHeader = Buffer.alloc(buffer.length - 0x10200);
@@ -13,7 +13,7 @@ class SPCFile {
         buffer.copy(this.aram, 0, 0x100, 0x10100);
         buffer.copy(this.dsp, 0, 0x10100, 0x10180);
     }
-    getBRR(id: number): Buffer {
+    public getBRR(id: number): Buffer {
         const sampleIndexPtr = this.dsp[0x5D] * 0x100;
         const samplePtr = this.aram.readUInt16LE(sampleIndexPtr + id * 4);
         const sampleLoop = this.aram.readUInt16LE(sampleIndexPtr + id * 4 + 2) - samplePtr;
@@ -24,7 +24,7 @@ class SPCFile {
                 break;
             }
             if (sampleCurrentPtr > (0xFFFF)) {
-                throw new Error('该 Sample 在 ARAM 结尾依然没有结束');
+                throw new Error("该 Sample 在 ARAM 结尾依然没有结束");
             }
         }
         const sampleLength = sampleCurrentPtr - samplePtr;
