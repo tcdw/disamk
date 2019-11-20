@@ -8,7 +8,9 @@ const helpContent = `Usage: disamk [OPTIONS]
 Options:
 -h              Display this help information and exit
 -i file         (Required) Input SPC file
--o dir          (Required) Output directory`;
+-o dir          (Required) Output directory
+--song song     Song ID between 1-10. Default: 10
+`;
 
 const args = minimist(process.argv.slice(2));
 
