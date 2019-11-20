@@ -1,27 +1,8 @@
 import { getLogger } from "log4js";
+import searchPattern from "./searchPattern";
 import SPCFile from "./SPCFile";
 
 const songAmount = 10;
-
-function searchPattern(buf: Buffer, first: number[], then: Array<number | number[]>) {
-    const firstPos = buf.indexOf(new Uint8Array(first), 0);
-    let nowPos = firstPos + first.length;
-    if (firstPos < 0) {
-        return null;
-    }
-    for (const e of then) {
-        if (Array.isArray(e)) {
-            const current = buf.indexOf(new Uint8Array(e), nowPos);
-            if (current !== nowPos) {
-                return null;
-            }
-            nowPos += e.length;
-        } else if (typeof e === "number") {
-            nowPos += e;
-        }
-    }
-    return firstPos;
-}
 
 function parse(spc: Buffer, song: number = 10) {
     const logger = getLogger("parser");
