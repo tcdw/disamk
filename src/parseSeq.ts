@@ -39,6 +39,14 @@ function parseSeq(aram: Buffer, beginPointer: number): IParseResult {
             nowPointer++;
         // vcmd
         } else if (now >= vcmdStart && now <= 0xff) {
+            // special: e9 [xx yy] zz
+            if (now === 0xe9) {
+                jumps.push(aram.readInt16LE(nowPointer + 1));
+            }
+            // special: fc [ww xx] yy zz
+            if (now === 0xfc && aram[nowPointer + 3] === 0) {
+                jumps.push(aram.readInt16LE(nowPointer + 1));
+            }
             const len = vcmdLength[now - vcmdStart];
             const temp = Buffer.alloc(len);
             aram.copy(temp, 0, nowPointer, nowPointer + len);

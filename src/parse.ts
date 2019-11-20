@@ -80,6 +80,19 @@ function parse(spc: Buffer, song: number = 10) {
         }
         paraList.push(para);
     });
+
+    // 对 sequence 的解析
+    const sequences: { [key: number]: number[][]; } = {};
+    const otherPointers: number[] = [];
+    paraList.forEach((e) => {
+        e.forEach((f) => {
+            const result = parseSeq(spcFile.aram, f);
+            sequences[f] = result.content;
+            otherPointers.push(...result.jumps);
+        });
+    });
+    console.log(sequences);
+    console.log(otherPointers);
 }
 
 export default parse;
