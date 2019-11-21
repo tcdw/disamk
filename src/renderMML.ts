@@ -170,7 +170,7 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 }
             }
             offset += e.length;
-            if (channel > 0 && paraList.length > 1 && !loopPut && offset >= paraList[1][channel]) {
+            if (channel >= 0 && paraList.length > 1 && !loopPut && offset >= paraList[1][channel]) {
                 if (offset !== paraList[1][channel]) {
                     throw new Error("Loop point position cuowei! ");
                 }
