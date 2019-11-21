@@ -47,6 +47,7 @@ function printBuffer(content: number[] | Uint8Array | Buffer): string {
 }
 
 function render(sequences: { [key: number]: number[][]; }) {
+    let subroutine = 1;
     function renderMML(sequence: number[][], handleSubroutine: boolean = false) {
         const logger = getLogger("renderer");
         logger.level = process.env.NODE_ENV === "development" ? "debug" : "info";
@@ -61,8 +62,10 @@ function render(sequences: { [key: number]: number[][]; }) {
         }
 
         function lineBreak() {
-            content.push(current);
-            current = [];
+            if (current.length > 0) {
+                content.push(current);
+                current = [];
+            }
         }
 
         sequence.forEach((e, i) => {
@@ -104,9 +107,21 @@ function render(sequences: { [key: number]: number[][]; }) {
                     lineBreak();
                 }
             } else if (h >= 0xda && h <= 0xff) {
-                add(printBuffer(e));
-                if (next[0] < 0xda) {
+                if (h === 0xda) {
                     lineBreak();
+                    add(`@${e[1]}`);
+                } else if (h === 0xe7) {
+                    add(`v${e[1]}`);
+                } else if (h === 0xe9) {
+                    const addr = Buffer.prototype.readInt16LE.call(e, 1);
+                    lineBreak();
+                    add(`[${renderMML(sequences[addr])}]${e[3]}`);
+                    lineBreak();
+                } else {
+                    add(printBuffer(e));
+                    if (next[0] < 0xda) {
+                        lineBreak();
+                    }
                 }
             }
         });
@@ -116,7 +131,7 @@ function render(sequences: { [key: number]: number[][]; }) {
         });
         return finalPrint.join("\n");
     }
-    console.log(renderMML(sequences[11130]));
+    console.log(renderMML(sequences[11130], true));
 }
 
 export default render;

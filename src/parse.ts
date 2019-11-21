@@ -94,6 +94,10 @@ function parse(spc: Buffer, song: number = 10) {
         });
     });
     otherPointers = uniq(otherPointers);
+    otherPointers.forEach((e) => {
+        const result = parseSeq(spcFile.aram, e);
+        sequences[e] = result.content;
+    });
     render(sequences);
 }
 
