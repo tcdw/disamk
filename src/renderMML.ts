@@ -53,11 +53,13 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
     otherPointers.forEach((e) => {
         callID[e] = null;
     });
-    function renderMML(sequence: number[][], handleSubroutine: boolean = false) {
+    function renderMML(sequence: number[][], handleSubroutine: boolean = false, channel: number = -1) {
         const content: string[][] = [];
         let current: string[] = [];
         let prevOctave = 0;
         let noteLength = 0;
+        let offset = paraList[0][channel] || 0;
+        let loopPut = false;
 
         function add(e: string) {
             current.push(e);
@@ -167,6 +169,16 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                     lineBreak();
                 }
             }
+            offset += e.length;
+            if (channel > 0 && paraList.length > 1 && !loopPut && offset >= paraList[1][channel]) {
+                if (offset !== paraList[1][channel]) {
+                    throw new Error("Loop point position cuowei! ");
+                }
+                lineBreak();
+                add("/");
+                lineBreak();
+                loopPut = true;
+            }
         });
         if (current.length > 0) {
             content.push(current);
@@ -181,11 +193,7 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
     for (let i = 0; i < 8; i++) {
         if (paraList[0][i] !== 0) {
             mml += `#${i}\n`;
-            mml += renderMML(sequences[paraList[0][i]], true);
-            if (paraList.length === 2) {
-                mml += "\n/\n";
-                mml += renderMML(sequences[paraList[1][i]], true);
-            }
+            mml += renderMML(sequences[paraList[0][i]], true, i);
             mml += "\n\n";
         }
     }
