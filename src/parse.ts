@@ -98,7 +98,7 @@ function parse(spc: Buffer, song: number = 10) {
         const result = parseSeq(spcFile.aram, e);
         sequences[e] = result.content;
     });
-    render(sequences);
+    render(sequences, paraList);
 }
 
 export default parse;

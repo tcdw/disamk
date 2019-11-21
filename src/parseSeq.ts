@@ -16,10 +16,12 @@ function parseSeq(aram: Buffer, beginPointer: number): IParseResult {
     const content: number[][] = [];
     const jumps: number[] = [];
     let nowPointer = beginPointer;
-    while (aram[nowPointer] !== 0) {
+    while (true) {
         const now = aram[nowPointer];
         // note length
-        if (now >= 0x1 && now <= 0x7f) {
+        if (now === 0x0) {
+            break;
+        } else if (now >= 0x1 && now <= 0x7f) {
             const temp: number[] = [];
             temp.push(now);
             // duration rate & velocity rate
