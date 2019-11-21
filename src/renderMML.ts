@@ -47,8 +47,9 @@ function printBuffer(content: number[] | Uint8Array | Buffer): string {
 }
 
 function render(sequences: { [key: number]: number[][]; }, paraList: number[][], otherPointers: number[]) {
-    let label = 1;
+    let label = 2;
     const callID: { [key: number]: number | null; } = {};
+    const rmc: string[] = ["(!1)[$F4 $09]"];
     otherPointers.forEach((e) => {
         callID[e] = null;
     });
@@ -111,6 +112,18 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 if (h === 0xda) {
                     lineBreak();
                     add(`@${e[1]}`);
+                } else if (h === 0xdb) {
+                    if (e[1] <= 20) {
+                        add(`y${e[1]}`);
+                    } else {
+                        const echoL = (e[1] >> 7) % 2;
+                        const echoR = (e[1] >> 6) % 2;
+                        add(`y${e[1] % 0x40},${echoL},${echoR}`);
+                    }
+                } else if (h === 0xe0) {
+                    add(`w${e[1]}`);
+                } else if (h === 0xe2) {
+                    add(`t${e[1]}`);
                 } else if (h === 0xe7) {
                     add(`v${e[1]}`);
                 } else if (h === 0xe9) {
@@ -131,6 +144,24 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                         lineBreak();
                         prevOctave = 0;
                     }
+                } else if (h === 0xfc) {
+                    lineBreak();
+                    add(`; ${printBuffer(e)}    ; rmc called`);
+                    lineBreak();
+                    const addr = Buffer.prototype.readInt16LE.call(e, 1);
+                    if (callID[addr] === null) {
+                        callID[addr] = label;
+                        label++;
+                    }
+                    if (e[3] === 0) {
+                        add(`(!1, 0)`);
+                    } else if (e[4] === 0) {
+                        add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)})`);
+                    } else {
+                        add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)}, ${e[4]})`);
+                    }
+                    rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
+                    lineBreak();
                 } else {
                     add(printBuffer(e));
                     lineBreak();
@@ -146,7 +177,20 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
         });
         return finalPrint.join("\n");
     }
-    console.log(renderMML(sequences[paraList[0][0]], true));
+    let mml = "";
+    for (let i = 0; i < 8; i++) {
+        if (paraList[0][i] !== 0) {
+            mml += `#${i}\n`;
+            mml += renderMML(sequences[paraList[0][i]], true);
+            if (paraList.length === 2) {
+                mml += "\n/\n";
+                mml += renderMML(sequences[paraList[1][i]], true);
+            }
+            mml += "\n\n";
+        }
+    }
+    mml = rmc.join("\n") + "\n\n" + mml;
+    console.log(mml);
 }
 
 export default render;
