@@ -1,3 +1,4 @@
+import { uniq } from "lodash";
 import { getLogger } from "log4js";
 import parseSeq from "./parseSeq";
 import searchPattern from "./searchPattern";
@@ -83,7 +84,7 @@ function parse(spc: Buffer, song: number = 10) {
 
     // 对 sequence 的解析
     const sequences: { [key: number]: number[][]; } = {};
-    const otherPointers: number[] = [];
+    let otherPointers: number[] = [];
     paraList.forEach((e) => {
         e.forEach((f) => {
             const result = parseSeq(spcFile.aram, f);
@@ -91,6 +92,7 @@ function parse(spc: Buffer, song: number = 10) {
             otherPointers.push(...result.jumps);
         });
     });
+    otherPointers = uniq(otherPointers);
     console.log(sequences);
     console.log(otherPointers);
 }
