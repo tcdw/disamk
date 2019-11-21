@@ -1,3 +1,6 @@
+/**
+ * 从一个 Buffer 中搜索一段中间被挖空的片段
+ */
 function searchPattern(buf: Buffer, first: number[], then: Array<number | number[]>) {
     const firstPos = buf.indexOf(new Uint8Array(first), 0);
     let nowPos = firstPos + first.length;
