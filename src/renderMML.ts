@@ -54,17 +54,20 @@ function render(sequences: { [key: number]: number[][]; }) {
         const content: string[][] = [];
         let current: string[] = [];
         let prevOctave = 0;
-        // 0: note, 1: vcmd
-        let prevType = 0;
         let noteLength = 0;
 
         function add(e: string) {
             current.push(e);
         }
 
-        sequence.forEach((e) => {
+        function lineBreak() {
+            content.push(current);
+            current = [];
+        }
+
+        sequence.forEach((e, i) => {
             const h = e[0];
-            let nowType = 0;
+            const next = sequence[i + 1] || {};
             if (h >= 0x1 && h <= 0x7f) {
                 noteLength = h;
                 if (e.length > 1) {
@@ -72,7 +75,7 @@ function render(sequences: { [key: number]: number[][]; }) {
                 }
             } else if (h >= 0x80 && h <= 0xc5) {
                 const note = h - 0x80;
-                const octave = Math.floor(h / 12) + 1;
+                const octave = Math.floor((h - 0x80) / 12) + 1;
                 if (prevOctave < 1) {
                     add(`o${octave}`);
                 } else if (octave > prevOctave) {
@@ -82,21 +85,30 @@ function render(sequences: { [key: number]: number[][]; }) {
                 }
                 prevOctave = octave;
                 add(`${notes[note % 12]}${getNoteLenForMML(noteLength)}`);
+                if (next[0] >= 0xda) {
+                    lineBreak();
+                }
             } else if (h === 0xc6) {
                 add(`^${getNoteLenForMML(noteLength)}`);
+                if (next[0] >= 0xda) {
+                    lineBreak();
+                }
             } else if (h === 0xc7) {
                 add(`r${getNoteLenForMML(noteLength)}`);
+                if (next[0] >= 0xda) {
+                    lineBreak();
+                }
             } else if (h >= 0xd0 && h <= 0xd9) {
                 add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength)}`);
+                if (next[0] >= 0xda) {
+                    lineBreak();
+                }
             } else if (h >= 0xda && h <= 0xff) {
-                nowType = 1;
                 add(printBuffer(e));
+                if (next[0] < 0xda) {
+                    lineBreak();
+                }
             }
-            if (nowType !== prevType) {
-                content.push(current);
-                current = [];
-            }
-            prevType = nowType;
         });
         const finalPrint: string[] = [];
         content.forEach((e) => {
@@ -104,6 +116,7 @@ function render(sequences: { [key: number]: number[][]; }) {
         });
         return finalPrint.join("\n");
     }
+    console.log(renderMML(sequences[11130]));
 }
 
 export default render;

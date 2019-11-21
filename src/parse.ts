@@ -1,6 +1,7 @@
 import { uniq } from "lodash";
 import { getLogger } from "log4js";
 import parseSeq from "./parseSeq";
+import render from "./renderMML";
 import searchPattern from "./searchPattern";
 import SPCFile from "./SPCFile";
 
@@ -93,6 +94,7 @@ function parse(spc: Buffer, song: number = 10) {
         });
     });
     otherPointers = uniq(otherPointers);
+    render(sequences);
 }
 
 export default parse;
