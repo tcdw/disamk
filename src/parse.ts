@@ -93,8 +93,6 @@ function parse(spc: Buffer, song: number = 10) {
         });
     });
     otherPointers = uniq(otherPointers);
-    console.log(sequences);
-    console.log(otherPointers);
 }
 
 export default parse;
