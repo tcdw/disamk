@@ -46,7 +46,12 @@ function printBuffer(content: number[] | Uint8Array | Buffer): string {
     return prettyList.join(" ");
 }
 
-function render(sequences: { [key: number]: number[][]; }, paraList: number[][]) {
+function render(sequences: { [key: number]: number[][]; }, paraList: number[][], otherPointers: number[]) {
+    let label = 1;
+    const callID: { [key: number]: number | null; } = {};
+    otherPointers.forEach((e) => {
+        callID[e] = null;
+    });
     function renderMML(sequence: number[][], handleSubroutine: boolean = false) {
         const content: string[][] = [];
         let current: string[] = [];
@@ -115,8 +120,16 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][])
                     if (handleSubroutine) {
                         const addr = Buffer.prototype.readInt16LE.call(e, 1);
                         lineBreak();
-                        add(`[${renderMML(sequences[addr])}]${e[3]}`);
+                        let loopCall = "";
+                        if (callID[addr] === null) {
+                            callID[addr] = label;
+                            label++;
+                            loopCall = `[\n${renderMML(sequences[addr])}\n]`;
+                        }
+                        loopCall = `(${callID[addr]})${loopCall}${e[3]}`;
+                        add(loopCall);
                         lineBreak();
+                        prevOctave = 0;
                     }
                 } else {
                     add(printBuffer(e));
@@ -124,7 +137,9 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][])
                 }
             }
         });
-        content.push(current);
+        if (current.length > 0) {
+            content.push(current);
+        }
         const finalPrint: string[] = [];
         content.forEach((e) => {
             finalPrint.push(e.join(" "));
