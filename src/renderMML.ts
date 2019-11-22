@@ -110,64 +110,66 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 if (next[0] >= 0xda) {
                     lineBreak();
                 }
-            } else if (h >= 0xda && h <= 0xff) {
-                if (h === 0xda) {
-                    lineBreak();
-                    add(`@${e[1]}`);
-                } else if (h === 0xdb) {
-                    if (e[1] <= 20) {
-                        add(`y${e[1]}`);
-                    } else {
-                        const echoL = (e[1] >> 7) % 2;
-                        const echoR = (e[1] >> 6) % 2;
-                        add(`y${e[1] % 0x40},${echoL},${echoR}`);
-                    }
-                } else if (h === 0xe0) {
-                    add(`w${e[1]}`);
-                } else if (h === 0xe2) {
-                    add(`t${e[1]}`);
-                } else if (h === 0xe7) {
-                    add(`v${e[1]}`);
-                } else if (h === 0xe9) {
-                    lineBreak();
-                    add(`; ${printBuffer(e)}    ; subroutine called`);
-                    lineBreak();
-                    if (handleSubroutine) {
-                        const addr = Buffer.prototype.readInt16LE.call(e, 1);
-                        lineBreak();
-                        let loopCall = "";
-                        if (callID[addr] === null) {
-                            callID[addr] = label;
-                            label++;
-                            loopCall = `[\n${renderMML(sequences[addr])}\n]`;
-                        }
-                        loopCall = `(${callID[addr]})${loopCall}${e[3]}`;
-                        add(loopCall);
-                        lineBreak();
-                        prevOctave = 0;
-                    }
-                } else if (h === 0xfc) {
-                    lineBreak();
-                    add(`; ${printBuffer(e)}    ; rmc called`);
-                    lineBreak();
+            } else if (h === 0xda) {
+                lineBreak();
+                add(`@${e[1]}`);
+            } else if (h === 0xdb) {
+                if (e[1] <= 20) {
+                    add(`y${e[1]}`);
+                } else {
+                    const echoL = (e[1] >> 7) % 2;
+                    const echoR = (e[1] >> 6) % 2;
+                    add(`y${e[1] % 0x40},${echoL},${echoR}`);
+                }
+            } else if (h === 0xe0) {
+                add(`w${e[1]}`);
+            } else if (h === 0xe2) {
+                add(`t${e[1]}`);
+            } else if (h === 0xe7) {
+                add(`v${e[1]}`);
+            } else if (h === 0xe9) {
+                lineBreak();
+                add(`; ${printBuffer(e)}    ; subroutine called`);
+                lineBreak();
+                if (handleSubroutine) {
                     const addr = Buffer.prototype.readInt16LE.call(e, 1);
+                    lineBreak();
+                    let loopCall = "";
                     if (callID[addr] === null) {
                         callID[addr] = label;
                         label++;
+                        loopCall = `[\n${renderMML(sequences[addr])}\n]`;
                     }
-                    if (e[3] === 0) {
-                        add(`(!1, 0)`);
-                    } else if (e[4] === 0) {
-                        add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)})`);
-                    } else {
-                        add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)}, ${e[4]})`);
-                    }
-                    rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
+                    loopCall = `(${callID[addr]})${loopCall}${e[3]}`;
+                    add(loopCall);
                     lineBreak();
-                } else {
-                    add(printBuffer(e));
-                    lineBreak();
+                    prevOctave = 0;
                 }
+            } else if (h === 0xfa && e[1] === 0x04) {
+                lineBreak();
+                add(`; ${printBuffer(e)}    ; echo buffer ${e[2] * 0x0800} alloced`);
+                lineBreak();
+            } else if (h === 0xfc) {
+                lineBreak();
+                add(`; ${printBuffer(e)}    ; rmc called`);
+                lineBreak();
+                const addr = Buffer.prototype.readInt16LE.call(e, 1);
+                if (callID[addr] === null) {
+                    callID[addr] = label;
+                    label++;
+                }
+                if (e[3] === 0) {
+                    add(`(!1, 0)`);
+                } else if (e[4] === 0) {
+                    add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)})`);
+                } else {
+                    add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)}, ${e[4]})`);
+                }
+                rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
+                lineBreak();
+            } else {
+                add(printBuffer(e));
+                lineBreak();
             }
             offset += e.length;
             if (channel >= 0 && paraList.length > 1 && !loopPut && offset >= paraList[1][channel]) {
