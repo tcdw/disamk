@@ -1,5 +1,4 @@
 import { getLogger } from "log4js";
-import { type } from "os";
 
 const notes: string[] = ["c", "c+", "d", "d+", "e", "f", "f+", "g", "g+", "a", "a+", "b"];
 
@@ -172,13 +171,13 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 if (callID[addr] === null) {
                     callID[addr] = label;
                     label++;
+                    rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
                 }
                 if (e[4] === 0) {
                     add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)})`);
                 } else {
                     add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)}, ${e[4]})`);
                 }
-                rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
                 lineBreak();
             } else {
                 add(printBuffer(e));
