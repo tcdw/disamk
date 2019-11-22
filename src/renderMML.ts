@@ -48,6 +48,8 @@ function printBuffer(content: number[] | Uint8Array | Buffer): string {
 
 function render(sequences: { [key: number]: number[][]; }, paraList: number[][], otherPointers: number[]) {
     let label = 2;
+    let vTable = 1;
+    let lastInstrument = 0;
     const callID: { [key: number]: number | null; } = {};
     const rmc: string[] = ["(!1)[$F4 $09]"];
     otherPointers.forEach((e) => {
@@ -113,6 +115,9 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
             } else if (h === 0xda) {
                 lineBreak();
                 add(`@${e[1]}`);
+                if (lastInstrument < e[1]) {
+                    lastInstrument = e[1];
+                }
             } else if (h === 0xdb) {
                 if (e[1] <= 20) {
                     add(`y${e[1]}`);
@@ -147,8 +152,10 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 }
             } else if (h === 0xfa && e[1] === 0x04) {
                 lineBreak();
-                add(`; ${printBuffer(e)}    ; echo buffer ${e[2] * 0x0800} alloced`);
+                add(`; ${printBuffer(e)}    ; echo buffer: ${e[2] * 0x0800}`);
                 lineBreak();
+            } else if (h === 0xfa && e[1] === 0x06) {
+                vTable = e[2];
             } else if (h === 0xfc) {
                 lineBreak();
                 add(`; ${printBuffer(e)}    ; rmc called`);
@@ -200,7 +207,11 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
         }
     }
     mml = rmc.join("\n") + "\n\n" + mml;
-    console.log(mml);
+    return {
+        lastInstrument,
+        mml,
+        vTable,
+    };
 }
 
 export default render;
