@@ -2,6 +2,7 @@ import { uniq } from "lodash";
 import { getLogger } from "log4js";
 import parseSeq from "./parseSeq";
 import render from "./renderMML";
+import handleSample from "./sample";
 import searchPattern from "./searchPattern";
 import SPCFile from "./SPCFile";
 
@@ -55,8 +56,10 @@ function parse(spc: Buffer, song: number = 10) {
     const paras: number[] = [];
     let loop = 0;
     let paraOffset = 0;
+    let paraLen = 0;
     while (true) {
         const now = spcFile.aram.readInt16LE(songEntry + paraOffset);
+        paraLen += 2;
         if (now === 0) {
             logger.debug("Para list ends!");
             break;
@@ -100,6 +103,7 @@ function parse(spc: Buffer, song: number = 10) {
     });
     const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers);
     console.log(mml);
+    handleSample(spcFile, songEntry + paraLen, lastInstrument);
 }
 
 export default parse;

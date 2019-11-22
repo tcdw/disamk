@@ -68,7 +68,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
         if (typeof firstSample === "undefined") {
             firstSample = current;
         }
-        sampleRead += 2;
+        sampleRead += 4;
         sampleAmount++;
     }
 
@@ -82,6 +82,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
             data,
         });
     }
+    console.log(samples);
 }
 
 export default handleSample;
