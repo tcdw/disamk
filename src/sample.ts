@@ -1,13 +1,17 @@
 // tslint:disable: object-literal-sort-keys
 
 import crypto from "crypto";
+import printBuffer from "./printBuffer";
+import printByte from "./printByte";
 import SPCFile from "./SPCFile";
 
 interface ISample {
     name: string;
     data: Buffer;
+    extract: boolean;
 }
 
+const smwRemap = [0, 1, 2, 3, 4, 8, 22, 5, 6, 7, 9, 10, 13, 14, 29, 21, 12, 17, 15];
 const known: { [key: string]: string | undefined; } = {
     "0397c10f5928f9495ced07fcca7a0989666e12ee": "../default/00 SMW @0.brr",
     "c4d64a77e5b6f3200b89062c734e6bc4a3eb7096": "../default/01 SMW @1.brr",
@@ -60,6 +64,10 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
     let sampleRead: number = spcFile.dsp[0x5D] * 0x100;
     let sampleAmount = 0;
     let firstSample: number | undefined;
+    let header = "";
+    function add(e: string) {
+        header += e + "\n";
+    }
     while (true) {
         const current = spcFile.aram.readInt16LE(sampleRead);
         if (typeof firstSample !== "undefined" && (current === 0 || sampleRead >= firstSample)) {
@@ -74,15 +82,42 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
 
     // sample naming
     const samples: ISample[] = [];
+    add("#samples");
+    add("{");
     for (let i = 0; i < sampleAmount; i++) {
         const data = spcFile.getBRR(i);
         const hash = getSum(data);
+        const name = known[hash] || `samp_${i}.brr`;
         samples.push({
-            name: known[hash] || `samp_${i}.brr`,
+            name,
             data,
+            extract: typeof known[hash] === "undefined",
         });
+        add(`\t"${name}"`);
     }
-    console.log(samples);
+    add("}");
+    if (lastInstrument >= 0x1E) {
+        const last = lastInstrument - 0x1E;
+        const instList: string[] = [];
+        for (let i = 0; i <= last; i++) {
+            const temp = spcFile.aram.slice(instPointer + (i * 6), instPointer + ((i + 1) * 6));
+            let instHeader: string;
+            if (temp[0] <= 0x12) {
+                instHeader = `@${smwRemap[temp[0]]}`;
+            } else if (temp[0] >= 0x80 && temp[0] < 0xa0) {
+                instHeader = `n${printByte(temp[0])}`;
+            } else {
+                instHeader = `"${samples[temp[0]].name}"`;
+            }
+            instList.push(`\t${instHeader} ${printBuffer(temp.slice(1))}`);
+        }
+        add("#instruments");
+        add("{");
+        add(instList.join("\n"));
+        add("}");
+    }
+    console.log(header);
+    return { header, samples };
 }
 
 export default handleSample;

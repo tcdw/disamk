@@ -68,6 +68,7 @@ function parse(spc: Buffer, song: number = 10) {
         } else if (now > 0x7f && now <= 0xff) {
             loop = (spcFile.aram.readInt16LE(songEntry + paraOffset + 2) - songEntry) / 2;
             logger.debug(`Para loop found, starting from ${loop}`);
+            paraLen += 2;
             break;
         } else {
             logger.debug(`Para: 0x${now.toString(16)}`);
@@ -102,7 +103,6 @@ function parse(spc: Buffer, song: number = 10) {
         sequences[e] = result.content;
     });
     const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers);
-    console.log(mml);
     handleSample(spcFile, songEntry + paraLen, lastInstrument);
 }
 
