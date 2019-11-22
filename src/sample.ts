@@ -9,6 +9,7 @@ export interface ISample {
     name: string;
     data: Buffer;
     extract: boolean;
+    hash: string;
 }
 
 const smwRemap = [0, 1, 2, 3, 4, 8, 22, 5, 6, 7, 9, 10, 13, 14, 29, 21, 12, 17, 15];
@@ -70,7 +71,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
     }
     while (true) {
         const current = spcFile.aram.readInt16LE(sampleRead);
-        if (typeof firstSample !== "undefined" && (current === 0 || sampleRead >= firstSample)) {
+        if (typeof firstSample !== "undefined" && sampleRead >= firstSample) {
             break;
         }
         if (typeof firstSample === "undefined") {
@@ -92,6 +93,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
             name,
             data,
             extract: typeof known[hash] === "undefined",
+            hash,
         });
         add(`\t"${name}"`);
     }
@@ -102,10 +104,10 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
         for (let i = 0; i <= last; i++) {
             const temp = spcFile.aram.slice(instPointer + (i * 6), instPointer + ((i + 1) * 6));
             let instHeader: string;
-            if (temp[0] <= 0x12) {
+            if (temp[0] <= 0x12 && (typeof known[samples[temp[0]].hash] !== "undefined")) {
                 instHeader = `@${smwRemap[temp[0]]}`;
             } else if (temp[0] >= 0x80 && temp[0] < 0xa0) {
-                instHeader = `n${printByte(temp[0])}`;
+                instHeader = `n${printByte(temp[0] - 0x80)}`;
             } else {
                 instHeader = `"${samples[temp[0]].name}"`;
             }
