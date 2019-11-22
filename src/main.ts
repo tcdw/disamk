@@ -1,4 +1,4 @@
-import { readFileSync } from "fs";
+import fs from "fs-extra";
 import minimist from "minimist";
 import { resolve } from "path";
 import parse from "./parse";
@@ -22,5 +22,13 @@ if (!args.i || !args.o) {
     process.stdout.write(helpContent);
     process.exit(1);
 }
-const spc = readFileSync(resolve(process.cwd(), args.i));
-parse(spc);
+const spc = fs.readFileSync(resolve(process.cwd(), args.i));
+const { mmlFile, samples } = parse(spc);
+const sampleDir = `disamk${new Date().getTime()}`;
+fs.mkdirpSync(resolve(process.cwd(), args.o, sampleDir));
+samples.forEach((e) => {
+    if (e.extract) {
+        fs.writeFileSync(resolve(process.cwd(), args.o, sampleDir, e.name), e.data);
+    }
+});
+fs.writeFileSync(resolve(process.cwd(), args.o, "result.txt"), `#amk 2\n#path "${sampleDir}"\n${mmlFile}`, { encoding: "utf8" });

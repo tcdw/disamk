@@ -5,7 +5,7 @@ import printBuffer from "./printBuffer";
 import printByte from "./printByte";
 import SPCFile from "./SPCFile";
 
-interface ISample {
+export interface ISample {
     name: string;
     data: Buffer;
     extract: boolean;
@@ -116,7 +116,6 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
         add(instList.join("\n"));
         add("}");
     }
-    console.log(header);
     return { header, samples };
 }
 

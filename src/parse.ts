@@ -2,20 +2,24 @@ import { uniq } from "lodash";
 import { getLogger } from "log4js";
 import parseSeq from "./parseSeq";
 import render from "./renderMML";
-import handleSample from "./sample";
+import handleSample, { ISample } from "./sample";
 import searchPattern from "./searchPattern";
 import SPCFile from "./SPCFile";
 
 const songAmount = 10;
 
-function parse(spc: Buffer, song: number = 10) {
+interface IParsed {
+    mmlFile: string;
+    samples: ISample[];
+}
+
+function parse(spc: Buffer, song: number = 10): IParsed {
     const logger = getLogger("parser");
     logger.level = process.env.NODE_ENV === "development" ? "debug" : "info";
 
     // 输入参数检查
     if (song < 1 || song > 10) {
-        logger.fatal("Bad song ID! It must between 1-10!");
-        return;
+        throw new Error("Bad song ID! It must between 1-10!");
     }
 
     const spcFile: SPCFile = new SPCFile(spc);
@@ -103,7 +107,14 @@ function parse(spc: Buffer, song: number = 10) {
         sequences[e] = result.content;
     });
     const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers);
-    handleSample(spcFile, songEntry + paraLen, lastInstrument);
+    const { header, samples } = handleSample(spcFile, songEntry + paraLen, lastInstrument);
+    let mmlFile: string = "";
+    if (vTable === 0) {
+        mmlFile += "#option smwvtable\n";
+    }
+    mmlFile += header;
+    mmlFile += mml;
+    return { mmlFile, samples };
 }
 
 export default parse;
