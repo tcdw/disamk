@@ -1,4 +1,6 @@
 import { getLogger } from "log4js";
+import printBuffer from "./printBuffer";
+import printByte from "./printByte";
 
 const notes: string[] = ["c", "c+", "d", "d+", "e", "f", "f+", "g", "g+", "a", "a+", "b"];
 
@@ -28,21 +30,6 @@ function getNoteLenForMML(tick: number, division = 48) {
         }
     }
     return `=${tick}`;
-}
-
-function printByte(byte: number): string {
-    if (byte < 0x10) {
-        return `0${byte.toString(16).toUpperCase()}`;
-    }
-    return `${byte.toString(16).toUpperCase()}`;
-}
-
-function printBuffer(content: number[] | Uint8Array | Buffer): string {
-    const prettyList: string[] = [];
-    content.forEach((e: number) => {
-        prettyList.push("$" + printByte(e));
-    });
-    return prettyList.join(" ");
 }
 
 function render(sequences: { [key: number]: number[][]; }, paraList: number[][], otherPointers: number[]) {
