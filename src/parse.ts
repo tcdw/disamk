@@ -99,6 +99,7 @@ function parse(spc: Buffer, song: number = 10) {
         sequences[e] = result.content;
     });
     const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers);
+    console.log(mml);
 }
 
 export default parse;

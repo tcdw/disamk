@@ -47,11 +47,11 @@ function printBuffer(content: number[] | Uint8Array | Buffer): string {
 }
 
 function render(sequences: { [key: number]: number[][]; }, paraList: number[][], otherPointers: number[]) {
-    let label = 2;
+    let label = 1;
     let vTable = 1;
     let lastInstrument = 0;
     const callID: { [key: number]: number | null; } = {};
-    const rmc: string[] = ["(!1)[$F4 $09]"];
+    const rmc: string[] = [];
     otherPointers.forEach((e) => {
         callID[e] = null;
     });
@@ -130,6 +130,14 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 add(`w${e[1]}`);
             } else if (h === 0xe2) {
                 add(`t${e[1]}`);
+            } else if (h === 0xe6 && e[1] === 0x00) {
+                lineBreak();
+                add("[[");
+                lineBreak();
+            } else if (h === 0xe6) {
+                lineBreak();
+                add(`]]${e[1] + 1}`);
+                lineBreak();
             } else if (h === 0xe7) {
                 add(`v${e[1]}`);
             } else if (h === 0xe9) {
@@ -165,9 +173,7 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                     callID[addr] = label;
                     label++;
                 }
-                if (e[3] === 0) {
-                    add(`(!1, 0)`);
-                } else if (e[4] === 0) {
+                if (e[4] === 0) {
                     add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)})`);
                 } else {
                     add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)}, ${e[4]})`);
@@ -179,7 +185,11 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 lineBreak();
             }
             offset += e.length;
-            if (channel >= 0 && paraList.length > 1 && !loopPut && offset >= paraList[1][channel]) {
+            if (channel >= 0
+                && paraList.length > 1
+                && paraList[1][channel] !== paraList[0][channel]
+                && !loopPut
+                && offset >= paraList[1][channel]) {
                 if (offset !== paraList[1][channel]) {
                     throw new Error("Loop point position cuowei! ");
                 }
