@@ -127,9 +127,9 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
             } else if (h === 0xe7) {
                 add(`v${e[1]}`);
             } else if (h === 0xe9) {
-                lineBreak();
-                add(`; ${printBuffer(e)}    ; subroutine called`);
-                lineBreak();
+                // lineBreak();
+                // add(`; ${printBuffer(e)}    ; subroutine called`);
+                // lineBreak();
                 if (handleSubroutine) {
                     const addr = Buffer.prototype.readInt16LE.call(e, 1);
                     lineBreak();
@@ -145,14 +145,14 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                     prevOctave = 0;
                 }
             } else if (h === 0xfa && e[1] === 0x04) {
-                lineBreak();
-                add(`; ${printBuffer(e)}    ; echo buffer: ${e[2] * 0x0800}`);
-                lineBreak();
+                // lineBreak();
+                // add(`; ${printBuffer(e)}    ; echo buffer: ${e[2] * 0x0800}`);
+                // lineBreak();
             } else if (h === 0xfa && e[1] === 0x06) {
                 vTable = e[2];
             } else if (h === 0xfc) {
-                lineBreak();
-                add(`; ${printBuffer(e)}    ; rmc called`);
+                // lineBreak();
+                // add(`; ${printBuffer(e)}    ; rmc called`);
                 lineBreak();
                 const addr = Buffer.prototype.readInt16LE.call(e, 1);
                 if (callID[addr] === null) {
