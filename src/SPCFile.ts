@@ -20,7 +20,7 @@ class SPCFile {
         let sampleCurrentPtr = samplePtr;
         while (true) {
             sampleCurrentPtr += 9;
-            if (this.aram[sampleCurrentPtr - 9] % 2 === 1) {
+            if ((sampleCurrentPtr !== samplePtr + 9) && this.aram[sampleCurrentPtr - 9] % 2 === 1) {
                 break;
             }
             if (sampleCurrentPtr > (0xFFFF)) {

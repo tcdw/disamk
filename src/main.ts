@@ -23,7 +23,7 @@ if (!args.i || !args.o) {
     process.exit(1);
 }
 const spc = fs.readFileSync(resolve(process.cwd(), args.i));
-const { mmlFile, samples } = parse(spc);
+const { mmlFile, samples } = parse(spc, args.song);
 const sampleDir = `disamk${new Date().getTime()}`;
 fs.mkdirpSync(resolve(process.cwd(), args.o, sampleDir));
 samples.forEach((e) => {

@@ -34,7 +34,7 @@ function parse(spc: Buffer, song: number = 10): IParsed {
     mov     $41, a                      ; c4 41
     */
     // 搜索 sequence list
-    const patPointer = searchPattern(spcFile.aram, [0x1c, 0xfd, 0xf6], [
+    const patPointer = searchPattern(spcFile.aram, [0xf6], [
         2,
         [0x2d, 0xc4, 0x40, 0xf6],
         2,
@@ -43,8 +43,8 @@ function parse(spc: Buffer, song: number = 10): IParsed {
     if (patPointer === null) {
         throw new Error(`Unable to find song pointers`);
     }
-    const pointerA = spcFile.aram.readInt16LE(patPointer + 3) + 2;
-    const pointerB = spcFile.aram.readInt16LE(patPointer + 9) + 1;
+    const pointerA = spcFile.aram.readInt16LE(patPointer + 1) + 2;
+    const pointerB = spcFile.aram.readInt16LE(patPointer + 7) + 1;
     if (pointerA !== pointerB) {
         throw new Error(`Bad song pointers`);
     }
@@ -68,7 +68,8 @@ function parse(spc: Buffer, song: number = 10): IParsed {
             logger.debug("Para list ends!");
             break;
         } else if (now > 0 && now <= 0x7f) {
-            throw new Error("Unexcepted situation: Block command between 0x01-0x7F");
+            throw new Error("Unexcepted situation: Block command between 0x01-0x7F (" + now + " at 0x" +
+                (songEntry + paraOffset).toString(16) + ")");
         } else if (now > 0x7f && now <= 0xff) {
             loop = (spcFile.aram.readInt16LE(songEntry + paraOffset + 2) - songEntry) / 2;
             logger.debug(`Para loop found, starting from ${loop}`);

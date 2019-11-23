@@ -1,8 +1,8 @@
 /**
  * 从一个 Buffer 中搜索一段中间被挖空的片段
  */
-function searchPattern(buf: Buffer, first: number[], then: Array<number | number[]>) {
-    const firstPos = buf.indexOf(new Uint8Array(first), 0);
+function searchPattern(buf: Buffer, first: number[], then: Array<number | number[]>, start = 0): number | null {
+    const firstPos = buf.indexOf(new Uint8Array(first), start);
     let nowPos = firstPos + first.length;
     if (firstPos < 0) {
         return null;
@@ -11,7 +11,7 @@ function searchPattern(buf: Buffer, first: number[], then: Array<number | number
         if (Array.isArray(e)) {
             const current = buf.indexOf(new Uint8Array(e), nowPos);
             if (current !== nowPos) {
-                return null;
+                return searchPattern(buf, first, then, nowPos);
             }
             nowPos += e.length;
         } else if (typeof e === "number") {
