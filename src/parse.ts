@@ -93,6 +93,7 @@ function parse(spc: Buffer, song: number = 10): IParsed {
     });
 
     // 对 sequence 的解析
+    // 1st scan: main
     const sequences: { [key: number]: number[][]; } = {};
     let otherPointers: number[] = [];
     paraList.forEach((e) => {
@@ -103,10 +104,20 @@ function parse(spc: Buffer, song: number = 10): IParsed {
         });
     });
     otherPointers = uniq(otherPointers);
+    // 2nd scan: subroutine
+    let rest: number[] = [];
     otherPointers.forEach((e) => {
         const result = parseSeq(spcFile.aram, e);
         sequences[e] = result.content;
+        rest.push(...result.jumps);
     });
+    // 3rd scan: possibly rmc
+    rest = uniq(rest);
+    rest.forEach((e) => {
+        const result = parseSeq(spcFile.aram, e);
+        sequences[e] = result.content;
+    });
+    otherPointers.push(...rest);
     const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers);
     const { header, samples } = handleSample(spcFile, songEntry + paraLen, lastInstrument);
     let mmlFile: string = "";
