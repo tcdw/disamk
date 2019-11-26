@@ -70,7 +70,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
         header += e + "\n";
     }
     while (true) {
-        const current = spcFile.aram.readInt16LE(sampleRead);
+        const current = spcFile.aram.readUInt16LE(sampleRead);
         if (typeof firstSample !== "undefined" && sampleRead >= firstSample) {
             break;
         }

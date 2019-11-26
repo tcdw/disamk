@@ -43,26 +43,26 @@ function parse(spc: Buffer, song: number = 10): IParsed {
     if (patPointer === null) {
         throw new Error(`Unable to find song pointers`);
     }
-    const pointerA = spcFile.aram.readInt16LE(patPointer + 1) + 2;
-    const pointerB = spcFile.aram.readInt16LE(patPointer + 7) + 1;
+    const pointerA = spcFile.aram.readUInt16LE(patPointer + 1) + 2;
+    const pointerB = spcFile.aram.readUInt16LE(patPointer + 7) + 1;
     if (pointerA !== pointerB) {
         throw new Error(`Bad song pointers`);
     }
     const songPointers = pointerA;
     logger.info(`Song pointers: 0x${songPointers.toString(16)}`);
     // for (let i = 0; i < songAmount; i++) {
-    //     logger.info(`Song ${i + 1}: 0x${spcFile.aram.readInt16LE(songPointers + (i * 2)).toString(16)}`);
+    //     logger.info(`Song ${i + 1}: 0x${spcFile.aram.readUInt16LE(songPointers + (i * 2)).toString(16)}`);
     // }
 
     // 对一个 song 的解析
-    const songEntry = spcFile.aram.readInt16LE(songPointers + ((song - 1) * 2));
+    const songEntry = spcFile.aram.readUInt16LE(songPointers + ((song - 1) * 2));
     logger.info(`Using song ${song} at 0x${songEntry.toString(16)}`);
     const paras: number[] = [];
     let loop = 0;
     let paraOffset = 0;
     let paraLen = 0;
     while (true) {
-        const now = spcFile.aram.readInt16LE(songEntry + paraOffset);
+        const now = spcFile.aram.readUInt16LE(songEntry + paraOffset);
         paraLen += 2;
         if (now === 0) {
             logger.debug("Para list ends!");
@@ -71,7 +71,7 @@ function parse(spc: Buffer, song: number = 10): IParsed {
             throw new Error("Unexcepted situation: Block command between 0x01-0x7F (" + now + " at 0x" +
                 (songEntry + paraOffset).toString(16) + ")");
         } else if (now > 0x7f && now <= 0xff) {
-            loop = (spcFile.aram.readInt16LE(songEntry + paraOffset + 2) - songEntry) / 2;
+            loop = (spcFile.aram.readUInt16LE(songEntry + paraOffset + 2) - songEntry) / 2;
             logger.debug(`Para loop found, starting from ${loop}`);
             paraLen += 2;
             break;
@@ -87,7 +87,7 @@ function parse(spc: Buffer, song: number = 10): IParsed {
     paras.forEach((e) => {
         const para: number[] = [];
         for (let i = 0; i < 8; i++) {
-            para.push(spcFile.aram.readInt16LE(e + i * 2));
+            para.push(spcFile.aram.readUInt16LE(e + i * 2));
         }
         paraList.push(para);
     });

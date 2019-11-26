@@ -43,11 +43,11 @@ function parseSeq(aram: Buffer, beginPointer: number): IParseResult {
         } else if (now >= vcmdStart && now <= 0xff) {
             // special: e9 [xx yy] zz
             if (now === 0xe9) {
-                jumps.push(aram.readInt16LE(nowPointer + 1));
+                jumps.push(aram.readUInt16LE(nowPointer + 1));
             }
             // special: fc [ww xx] yy zz
             if (now === 0xfc) {
-                jumps.push(aram.readInt16LE(nowPointer + 1));
+                jumps.push(aram.readUInt16LE(nowPointer + 1));
             }
             const len = vcmdLength[now - vcmdStart];
             const temp = Buffer.alloc(len);
@@ -57,6 +57,7 @@ function parseSeq(aram: Buffer, beginPointer: number): IParseResult {
         } else {
             throw new Error(`Unexpected command 0x${now} at 0x${nowPointer}`);
         }
+        // console.log(nowPointer.toString(16) + ": " + content[content.length - 1]);
     }
     return { content, jumps };
 }

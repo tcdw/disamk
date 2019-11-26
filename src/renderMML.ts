@@ -131,7 +131,7 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 // add(`; ${printBuffer(e)}    ; subroutine called`);
                 // lineBreak();
                 if (handleSubroutine) {
-                    const addr = Buffer.prototype.readInt16LE.call(e, 1);
+                    const addr = Buffer.prototype.readUInt16LE.call(e, 1);
                     lineBreak();
                     let loopCall = "";
                     if (callID[addr] === null) {
@@ -154,16 +154,16 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 // lineBreak();
                 // add(`; ${printBuffer(e)}    ; rmc called`);
                 lineBreak();
-                const addr = Buffer.prototype.readInt16LE.call(e, 1);
+                const addr = Buffer.prototype.readUInt16LE.call(e, 1);
                 if (callID[addr] === null) {
                     callID[addr] = label;
                     label++;
                     rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
                 }
                 if (e[4] === 0) {
-                    add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)})`);
+                    add(`(!${callID[addr]}, ${Buffer.prototype.readUInt8.call(e, 3)})`);
                 } else {
-                    add(`(!${callID[addr]}, ${Buffer.prototype.readInt8.call(e, 3)}, ${e[4]})`);
+                    add(`(!${callID[addr]}, ${Buffer.prototype.readUInt8.call(e, 3)}, ${e[4]})`);
                 }
                 lineBreak();
             } else {
