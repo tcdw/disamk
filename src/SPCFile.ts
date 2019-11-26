@@ -23,8 +23,8 @@ class SPCFile {
             if ((sampleCurrentPtr !== samplePtr + 9) && this.aram[sampleCurrentPtr - 9] % 2 === 1) {
                 break;
             }
-            if (sampleCurrentPtr > (0xFFFF)) {
-                throw new Error("该 Sample 在 ARAM 结尾依然没有结束");
+            if (sampleCurrentPtr > 0xFFFF) {
+                throw new Error("Sample size exceeded (Probably a bad sample)");
             }
         }
         const sampleLength = sampleCurrentPtr - samplePtr;
