@@ -23,6 +23,14 @@ Example: `node bin\disamk -i D:\mm3_snakeman.spc`
 
 And a directory contains txt and sample directory will be generated at `D:\mm3_snakeman`.
 
+## FAQ
+
+### Why the outputed txt has no line breaks?
+
+You probably opened with Windows' Notepad, which isn't supporting UNIX line breaking.
+
+You can try open the generated txt file with other text editors, such as Sublime Text and Kate.
+
 ## Why this tool exists?
 
 The main reason I made this is letting people recovering the source file from a single SPC, or learning porting tricks from SPCs released in SMWC Idol/Super Famicompo/etc.
