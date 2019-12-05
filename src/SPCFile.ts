@@ -24,7 +24,7 @@ class SPCFile {
                 break;
             }
             if (sampleCurrentPtr > 0xFFFF) {
-                throw new Error("Sample size exceeded (Probably a bad sample)");
+                throw new Error("Sample " + id.toString() + "'s size exceeded (Probably a bad sample)");
             }
         }
         const sampleLength = sampleCurrentPtr - samplePtr;
