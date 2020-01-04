@@ -1,3 +1,4 @@
+import { Buffer as BBuffer } from "buffer/";
 import { uniq } from "lodash";
 import { getLogger } from "log4js";
 import parseSeq from "./parseSeq";
@@ -13,7 +14,8 @@ interface IParsed {
     samples: ISample[];
 }
 
-function parse(spc: Buffer, song: number = 10): IParsed {
+function parse(input: Uint8Array, song: number = 10): IParsed {
+    const spc = BBuffer.from(input);
     const logger = getLogger("parser");
     logger.level = process.env.NODE_ENV === "development" ? "debug" : "info";
 

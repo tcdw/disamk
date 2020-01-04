@@ -17,6 +17,7 @@
     "@types/lodash": "^4.14.149",
     "@types/minimist": "^1.2.0",
     "@types/node": "^12.12.9",
+    "buffer": "^5.4.3",
     "fs-extra": "^8.1.0",
     "lodash": "^4.17.15",
     "log4js": "^6.1.0",

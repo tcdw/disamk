@@ -1,3 +1,5 @@
+import { Buffer as BBuffer } from "buffer/";
+
 const vcmdStart = 0xda;
 const vcmdLength = [
                 0x02, 0x02, 0x03, 0x04, 0x04, 0x01, // DA-DF
@@ -12,7 +14,7 @@ interface IParseResult {
     jumps: number[];
 }
 
-function parseSeq(aram: Buffer, beginPointer: number): IParseResult {
+function parseSeq(aram: BBuffer, beginPointer: number): IParseResult {
     const content: number[][] = [];
     const jumps: number[] = [];
     let nowPointer = beginPointer;
@@ -50,7 +52,7 @@ function parseSeq(aram: Buffer, beginPointer: number): IParseResult {
                 jumps.push(aram.readUInt16LE(nowPointer + 1));
             }
             const len = vcmdLength[now - vcmdStart];
-            const temp = Buffer.alloc(len);
+            const temp = BBuffer.alloc(len);
             aram.copy(temp, 0, nowPointer, nowPointer + len);
             content.push([...temp]);
             nowPointer += len;

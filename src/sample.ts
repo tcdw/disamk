@@ -1,13 +1,14 @@
 // tslint:disable: object-literal-sort-keys
 
+import { Buffer as BBuffer } from "buffer/";
 import crypto from "crypto";
-import printBuffer from "./printBuffer";
+import printBBuffer from "./printBuffer";
 import printByte from "./printByte";
 import SPCFile from "./SPCFile";
 
 export interface ISample {
     name: string;
-    data: Buffer;
+    data: BBuffer;
     extract: boolean;
     hash: string;
 }
@@ -57,7 +58,7 @@ const known: { [key: string]: string | undefined; } = {
     "1175ae90ff2ef6f8cec1d89daabccb4b15c98eb6": "../optimized/13 SMW Thunder.brr",
 };
 
-function getSum(buf: Buffer) {
+function getSum(buf: BBuffer) {
     return crypto.createHash("sha1").update(buf).digest("hex");
 }
 
@@ -111,7 +112,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
             } else {
                 instHeader = `"${samples[temp[0]].name}"`;
             }
-            instList.push(`\t${instHeader} ${printBuffer(temp.slice(1))}`);
+            instList.push(`\t${instHeader} ${printBBuffer(temp.slice(1))}`);
         }
         add("#instruments");
         add("{");

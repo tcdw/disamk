@@ -1,4 +1,4 @@
-import { getLogger } from "log4js";
+import { Buffer as BBuffer } from "buffer/";
 import printBuffer from "./printBuffer";
 import printByte from "./printByte";
 
@@ -128,10 +128,10 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 add(`v${e[1]}`);
             } else if (h === 0xe9) {
                 // lineBreak();
-                // add(`; ${printBuffer(e)}    ; subroutine called`);
+                // add(`; ${printBBuffer(e)}    ; subroutine called`);
                 // lineBreak();
                 if (handleSubroutine) {
-                    const addr = Buffer.prototype.readUInt16LE.call(e, 1);
+                    const addr = BBuffer.prototype.readUInt16LE.call(e, 1);
                     lineBreak();
                     let loopCall = "";
                     if (callID[addr] === null) {
@@ -146,24 +146,24 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 }
             } else if (h === 0xfa && e[1] === 0x04) {
                 // lineBreak();
-                // add(`; ${printBuffer(e)}    ; echo buffer: ${e[2] * 0x0800}`);
+                // add(`; ${printBBuffer(e)}    ; echo BBuffer: ${e[2] * 0x0800}`);
                 // lineBreak();
             } else if (h === 0xfa && e[1] === 0x06) {
                 vTable = e[2];
             } else if (h === 0xfc) {
                 // lineBreak();
-                // add(`; ${printBuffer(e)}    ; rmc called`);
+                // add(`; ${printBBuffer(e)}    ; rmc called`);
                 lineBreak();
-                const addr = Buffer.prototype.readUInt16LE.call(e, 1);
+                const addr = BBuffer.prototype.readUInt16LE.call(e, 1);
                 if (callID[addr] === null) {
                     callID[addr] = label;
                     label++;
                     rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
                 }
                 if (e[4] === 0) {
-                    add(`(!${callID[addr]}, ${Buffer.prototype.readUInt8.call(e, 3)})`);
+                    add(`(!${callID[addr]}, ${BBuffer.prototype.readUInt8.call(e, 3)})`);
                 } else {
-                    add(`(!${callID[addr]}, ${Buffer.prototype.readUInt8.call(e, 3)}, ${e[4]})`);
+                    add(`(!${callID[addr]}, ${BBuffer.prototype.readUInt8.call(e, 3)}, ${e[4]})`);
                 }
                 lineBreak();
             } else {
