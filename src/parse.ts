@@ -12,7 +12,7 @@ interface IParsed {
     samples: ISample[];
 }
 
-function parse(input: Uint8Array, song: number = 10): IParsed {
+function parse(input: Uint8Array | ArrayBuffer, song: number = 10): IParsed {
     const spc = BBuffer.from(input);
     // 输入参数检查
     if (song < 1 || song > 10) {

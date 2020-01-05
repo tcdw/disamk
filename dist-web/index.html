@@ -1,10 +1,37 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="UTF-8">
-        <title>AddmusicK SPC Disassembler</title>
-    </head>
-    <body>
-        
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
+    <title>AddmusicK 1.0.X SPC Disassembler</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AddmusicK 1.0.X SPC Disassembler</h1>
+        </header>
+        <section class="error" id="error">
+            Error:
+        </section>
+        <section class="upload">
+            <input type="file" id="file-receiver">
+            <label class="button" for="file-receiver" id="upload-btn">Select SPC</label>
+        </section>
+        <section class="info">
+            <div class="markdown-body">
+                <p>You can convert your AddmusicK 1.0.X SPC back into MML and BRR samples.</p>
+                <p>Click "Select SPC" button, select your SPC file, then the disassembled result will be downloaded automatically from your browser.</p>
+                <h2>Important Notice</h2>
+                <p>This tool is purely frontend-based, which won't upload any data into our server. You 
+                    can get source code <a href="https://gitlab.com/tcdw/disamk" target="_blank">here</a>.</p>
+            </div>
+        </section>
+    </div>
+    <footer>
+        &copy; 2020 tcdw
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.2.2/dist/jszip.min.js"></script>
+    <script src="index.js"></script>
+</body>
 </html>
