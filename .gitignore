@@ -2,3 +2,6 @@ dist/
 node_modules/
 test.sh
 .idea
+dist-web/*.js
+dist-web/*.css
+dist-web/*.map

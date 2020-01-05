@@ -1,6 +1,4 @@
 import { Buffer as BBuffer } from "buffer/";
-import { uniq } from "lodash";
-import { getLogger } from "log4js";
 import parseSeq from "./parseSeq";
 import render from "./renderMML";
 import handleSample, { ISample } from "./sample";
@@ -16,9 +14,6 @@ interface IParsed {
 
 function parse(input: Uint8Array, song: number = 10): IParsed {
     const spc = BBuffer.from(input);
-    const logger = getLogger("parser");
-    logger.level = process.env.NODE_ENV === "development" ? "debug" : "info";
-
     // 输入参数检查
     if (song < 1 || song > 10) {
         throw new Error("Bad song ID! It must between 1-10!");
@@ -51,14 +46,14 @@ function parse(input: Uint8Array, song: number = 10): IParsed {
         throw new Error(`Bad song pointers`);
     }
     const songPointers = pointerA;
-    logger.info(`Song pointers: 0x${songPointers.toString(16)}`);
+    // logger.info(`Song pointers: 0x${songPointers.toString(16)}`);
     // for (let i = 0; i < songAmount; i++) {
     //     logger.info(`Song ${i + 1}: 0x${spcFile.aram.readUInt16LE(songPointers + (i * 2)).toString(16)}`);
     // }
 
     // 对一个 song 的解析
     const songEntry = spcFile.aram.readUInt16LE(songPointers + ((song - 1) * 2));
-    logger.info(`Using song ${song} at 0x${songEntry.toString(16)}`);
+    // logger.info(`Using song ${song} at 0x${songEntry.toString(16)}`);
     const paras: number[] = [];
     let loop = 0;
     let paraOffset = 0;
@@ -67,18 +62,18 @@ function parse(input: Uint8Array, song: number = 10): IParsed {
         const now = spcFile.aram.readUInt16LE(songEntry + paraOffset);
         paraLen += 2;
         if (now === 0) {
-            logger.debug("Para list ends!");
+            // logger.debug("Para list ends!");
             break;
         } else if (now > 0 && now <= 0x7f) {
             throw new Error("Unexcepted situation: Block command between 0x01-0x7F (" + now + " at 0x" +
                 (songEntry + paraOffset).toString(16) + ")");
         } else if (now > 0x7f && now <= 0xff) {
             loop = (spcFile.aram.readUInt16LE(songEntry + paraOffset + 2) - songEntry) / 2;
-            logger.debug(`Para loop found, starting from ${loop}`);
+            // logger.debug(`Para loop found, starting from ${loop}`);
             paraLen += 2;
             break;
         } else {
-            logger.debug(`Para: 0x${now.toString(16)}`);
+            // logger.debug(`Para: 0x${now.toString(16)}`);
             paras.push(now);
             paraOffset += 2;
         }
@@ -105,7 +100,7 @@ function parse(input: Uint8Array, song: number = 10): IParsed {
             otherPointers.push(...result.jumps);
         });
     });
-    otherPointers = uniq(otherPointers);
+    otherPointers = [...new Set(otherPointers)];
     // 2nd scan: subroutine
     let rest: number[] = [];
     otherPointers.forEach((e) => {
@@ -114,7 +109,7 @@ function parse(input: Uint8Array, song: number = 10): IParsed {
         rest.push(...result.jumps);
     });
     // 3rd scan: possibly rmc
-    rest = uniq(rest);
+    rest = [...new Set(rest)];
     rest.forEach((e) => {
         const result = parseSeq(spcFile.aram, e);
         sequences[e] = result.content;

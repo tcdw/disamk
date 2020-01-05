@@ -1,7 +1,7 @@
 // tslint:disable: object-literal-sort-keys
 
 import { Buffer as BBuffer } from "buffer/";
-import crypto from "crypto";
+import { sha256 } from "js-sha256";
 import printBBuffer from "./printBuffer";
 import printByte from "./printByte";
 import SPCFile from "./SPCFile";
@@ -58,10 +58,6 @@ const known: { [key: string]: string | undefined; } = {
     "1175ae90ff2ef6f8cec1d89daabccb4b15c98eb6": "../optimized/13 SMW Thunder.brr",
 };
 
-function getSum(buf: BBuffer) {
-    return crypto.createHash("sha1").update(buf).digest("hex");
-}
-
 function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: number) {
     let sampleRead: number = spcFile.dsp[0x5D] * 0x100;
     let sampleAmount = 0;
@@ -88,7 +84,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
     add("{");
     for (let i = 0; i < sampleAmount; i++) {
         const data = spcFile.getBRR(i);
-        const hash = getSum(data);
+        const hash = sha256(data);
         const name = known[hash] || `samp_${i}.brr`;
         samples.push({
             name,
