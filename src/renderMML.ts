@@ -100,7 +100,7 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 }
             } else if (h === 0xda) {
                 lineBreak();
-                add(`@${e[1]}`);
+                add(`@${e[1]} h0`);
                 if (lastInstrument < e[1]) {
                     lastInstrument = e[1];
                 }
