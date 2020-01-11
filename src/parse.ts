@@ -7,9 +7,15 @@ import SPCFile from "./SPCFile";
 
 const songAmount = 10;
 
-interface IParsed {
+export interface IParsed {
     mmlFile: string;
     samples: ISample[];
+}
+
+export enum ParseMode {
+    AM4,
+    AMM,
+    AMK,
 }
 
 function parse(input: Uint8Array | ArrayBuffer, song: number = 10): IParsed {
@@ -95,7 +101,7 @@ function parse(input: Uint8Array | ArrayBuffer, song: number = 10): IParsed {
     let otherPointers: number[] = [];
     paraList.forEach((e) => {
         e.forEach((f) => {
-            const result = parseSeq(spcFile.aram, f);
+            const result = parseSeq(ParseMode.AMK, spcFile.aram, f);
             sequences[f] = result.content;
             otherPointers.push(...result.jumps);
         });
@@ -104,14 +110,14 @@ function parse(input: Uint8Array | ArrayBuffer, song: number = 10): IParsed {
     // 2nd scan: subroutine
     let rest: number[] = [];
     otherPointers.forEach((e) => {
-        const result = parseSeq(spcFile.aram, e);
+        const result = parseSeq(ParseMode.AMK, spcFile.aram, e);
         sequences[e] = result.content;
         rest.push(...result.jumps);
     });
     // 3rd scan: possibly rmc
     rest = [...new Set(rest)];
     rest.forEach((e) => {
-        const result = parseSeq(spcFile.aram, e);
+        const result = parseSeq(ParseMode.AMK, spcFile.aram, e);
         sequences[e] = result.content;
     });
     otherPointers.push(...rest);

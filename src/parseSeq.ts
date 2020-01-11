@@ -1,20 +1,20 @@
 import { Buffer as BBuffer } from "buffer/";
-
-const vcmdStart = 0xda;
-const vcmdLength = [
-                0x02, 0x02, 0x03, 0x04, 0x04, 0x01, // DA-DF
-    0x02, 0x03, 0x02, 0x03, 0x02, 0x04, 0x02, 0x02, // E0-E7
-    0x03, 0x04, 0x02, 0x04, 0x04, 0x03, 0x02, 0x04, // E8-EF
-    0x01, 0x04, 0x04, 0x03, 0x02, 0x09, 0x03, 0x04, // F0-F7
-    0x02, 0x03, 0x03, 0x03, 0x05, 0x00, 0x00, 0x00, // F8-FF
-];
+import { ParseMode } from "./parse";
 
 interface IParseResult {
     content: number[][];
     jumps: number[];
 }
 
-function parseSeq(aram: BBuffer, beginPointer: number): IParseResult {
+function parseSeq(mode: ParseMode, aram: BBuffer, beginPointer: number): IParseResult {
+    const vcmdStart = 0xda;
+    const vcmdLength = [
+                    0x02, 0x02, 0x03, 0x04, 0x04, 0x01, // DA-DF
+        0x02, 0x03, 0x02, 0x03, 0x02, 0x04, 0x02, 0x02, // E0-E7
+        0x03, 0x04, 0x02, 0x04, 0x04, 0x03, 0x02, 0x04, // E8-EF
+        0x01, 0x04, 0x04, 0x03, 0x02, 0x09, 0x03, 0x04, // F0-F7
+        0x02, 0x03, 0x03, 0x03, 0x05, 0x00, 0x00, 0x00, // F8-FF
+    ];
     const content: number[][] = [];
     const jumps: number[] = [];
     let nowPointer = beginPointer;
@@ -43,15 +43,25 @@ function parseSeq(aram: BBuffer, beginPointer: number): IParseResult {
             nowPointer++;
         // vcmd
         } else if (now >= vcmdStart && now <= 0xff) {
+            const len = vcmdLength[now - vcmdStart];
+
+            // Addmusic 4.05 uses $E5 $80+ for custom sample calling
+            if (mode === ParseMode.AM4 && now === 0xE5 && aram[nowPointer + 1] >= 0x80) {
+                content.push([0xF3, aram[nowPointer + 1] - 0x80, aram[nowPointer + 2]]);
+                nowPointer += 3;
+                continue;
+            }
+
             // special: e9 [xx yy] zz
             if (now === 0xe9) {
                 jumps.push(aram.readUInt16LE(nowPointer + 1));
             }
+
             // special: fc [ww xx] yy zz
             if (now === 0xfc) {
                 jumps.push(aram.readUInt16LE(nowPointer + 1));
             }
-            const len = vcmdLength[now - vcmdStart];
+
             const temp = BBuffer.alloc(len);
             aram.copy(temp, 0, nowPointer, nowPointer + len);
             content.push([...temp]);
