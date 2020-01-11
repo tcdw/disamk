@@ -46,10 +46,12 @@ function parseSeq(mode: ParseMode, aram: BBuffer, beginPointer: number): IParseR
             const len = vcmdLength[now - vcmdStart];
 
             // Addmusic 4.05 uses $E5 $80+ for custom sample calling
-            if (mode === ParseMode.AM4 && now === 0xE5 && aram[nowPointer + 1] >= 0x80) {
-                content.push([0xF3, aram[nowPointer + 1] - 0x80, aram[nowPointer + 2]]);
-                nowPointer += 3;
-                continue;
+            if (mode === ParseMode.AM4) {
+                if (now === 0xE5 && aram[nowPointer + 1] >= 0x80) {
+                    content.push([0xF3, aram[nowPointer + 1] - 0x80, aram[nowPointer + 2]]);
+                    nowPointer += 3;
+                    continue;
+                }
             }
 
             // special: e9 [xx yy] zz
