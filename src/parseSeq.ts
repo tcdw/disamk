@@ -71,6 +71,7 @@ function parseSeq(mode: ParseMode, aram: BBuffer, beginPointer: number): IParseR
                     const dataStart = nowPointer + 6;
                     aram.copy(aram, target, dataStart, dataStart + length);
                     nowPointer += 6 + length;
+                    aramAltered = true;
                     continue;
                 }
                 // $ED $83 for direct ARAM code writing and executing...?!
