@@ -92,7 +92,7 @@ function parseSeq(mode: ParseMode, aram: BBuffer, beginPointer: number): IParseR
             }
 
             // special: fc [ww xx] yy zz
-            if (now === 0xfc) {
+            if (mode === ParseMode.AMK && now === 0xfc) {
                 jumps.push(aram.readUInt16LE(nowPointer + 1));
             }
 
