@@ -1,5 +1,5 @@
 import { Buffer as BBuffer } from "buffer/";
-import { ParseMode } from "./parse";
+import { ParseMode } from "./parseMode";
 
 interface IParseResult {
     content: number[][];

@@ -1,4 +1,5 @@
 import { Buffer as BBuffer } from "buffer/";
+import { ParseMode } from "./parseMode";
 import parseSeq from "./parseSeq";
 import render from "./renderMML";
 import handleSample, { ISample } from "./sample";
@@ -10,12 +11,6 @@ const songAmount = 10;
 export interface IParsed {
     mmlFile: string;
     samples: ISample[];
-}
-
-export enum ParseMode {
-    AM4,
-    AMM,
-    AMK,
 }
 
 function parse(input: Uint8Array | ArrayBuffer, song: number = 10): IParsed {
