@@ -10,9 +10,7 @@ function handleUpload(name: string, spc: ArrayBuffer) {
 
     const sample = zip.folder(sampleDir);
     samples.forEach((e) => {
-        if (e.extract) {
-            sample.file(e.name, e.data);
-        }
+        sample.file(e.name, e.data);
     });
     zip.generateAsync({
         type: "blob",

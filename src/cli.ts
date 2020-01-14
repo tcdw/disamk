@@ -30,9 +30,7 @@ const { mmlFile, samples } = parse(spc, args.song);
 const sampleDir = `disamk${new Date().getTime()}`;
 fs.mkdirpSync(path.resolve(process.cwd(), out, sampleDir));
 samples.forEach((e) => {
-    if (e.extract) {
-        fs.writeFileSync(path.resolve(process.cwd(), out, sampleDir, e.name), e.data);
-    }
+    fs.writeFileSync(path.resolve(process.cwd(), out, sampleDir, e.name), e.data);
 });
 fs.writeFileSync(path.resolve(process.cwd(), out, "result.txt"),
     `#amk 2\n#path "${sampleDir}"\n${mmlFile}`, { encoding: "utf8" });
