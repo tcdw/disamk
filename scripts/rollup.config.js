@@ -15,6 +15,7 @@ const base = {
     output: {
         file: 'dist-web/index.js',
         format: 'iife',
+        name: 'disamk',
         sourcemap: (env !== 'production'),
         globals: {
             jszip: 'JSZip',
