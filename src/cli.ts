@@ -1,7 +1,7 @@
-import fs from "fs-extra";
-import minimist from "minimist";
-import path from "path";
-import parse from "./parse";
+import fs from 'fs-extra';
+import minimist from 'minimist';
+import path from 'path';
+import parse from './parse';
 
 const helpContent = `Usage: disamk [OPTIONS]
 
@@ -32,5 +32,5 @@ fs.mkdirpSync(path.resolve(process.cwd(), out, sampleDir));
 samples.forEach((e) => {
     fs.writeFileSync(path.resolve(process.cwd(), out, sampleDir, e.name), e.data);
 });
-fs.writeFileSync(path.resolve(process.cwd(), out, "result.txt"),
-    `#amk 2\n#path "${sampleDir}"\n${mmlFile}`, { encoding: "utf8" });
+fs.writeFileSync(path.resolve(process.cwd(), out, 'result.txt'),
+    `#amk 2\n#path "${sampleDir}"\n${mmlFile}`, { encoding: 'utf8' });

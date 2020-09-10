@@ -1,10 +1,14 @@
-import { Buffer as BBuffer } from "buffer/";
+import { Buffer as BBuffer } from 'buffer/';
 
 class SPCFile {
     public mainHeader: BBuffer;
+
     public extraHeader: BBuffer;
+
     public aram: BBuffer;
+
     public dsp: BBuffer;
+
     constructor(buffer: BBuffer) {
         this.mainHeader = BBuffer.alloc(0x100);
         this.extraHeader = BBuffer.alloc(buffer.length - 0x10200);
@@ -15,6 +19,7 @@ class SPCFile {
         buffer.copy(this.aram, 0, 0x100, 0x10100);
         buffer.copy(this.dsp, 0, 0x10100, 0x10180);
     }
+
     public getBRR(id: number): BBuffer {
         const sampleIndexPtr = this.dsp[0x5D] * 0x100;
         const samplePtr = this.aram.readUInt16LE(sampleIndexPtr + id * 4);
@@ -26,7 +31,7 @@ class SPCFile {
                 break;
             }
             if (sampleCurrentPtr > 0xFFFF) {
-                throw new Error("Sample " + id.toString() + "'s size exceeded (Probably a bad sample)");
+                throw new Error(`Sample ${id.toString()}'s size exceeded (Probably a bad sample)`);
             }
         }
         const sampleLength = sampleCurrentPtr - samplePtr;

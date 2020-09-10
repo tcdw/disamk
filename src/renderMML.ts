@@ -1,8 +1,10 @@
-import { Buffer as BBuffer } from "buffer/";
-import printBuffer from "./printBuffer";
-import printByte from "./printByte";
+/* eslint-disable no-bitwise */
 
-const notes: string[] = ["c", "c+", "d", "d+", "e", "f", "f+", "g", "g+", "a", "a+", "b"];
+import { Buffer as BBuffer } from 'buffer/';
+import printBuffer from './printBuffer';
+import printByte from './printByte';
+
+const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
 
 // 改写自 https://github.com/loveemu/spc_converters_legacy/blob/master/nintspc/src/nintspc.c
 function getNoteLenForMML(tick: number, division = 48) {
@@ -10,11 +12,10 @@ function getNoteLenForMML(tick: number, division = 48) {
     const note = division * 4;
     let l;
     let dot;
-    let text = "";
+    let text = '';
     for (l = 1; l <= note; l += 1) {
         let cTick = 0;
         for (dot = 0; dot <= dotMax; dot += 1) {
-            // tslint:disable-next-line: no-bitwise
             const ld = (l << dot);
             if (note % ld) {
                 break;
@@ -23,7 +24,7 @@ function getNoteLenForMML(tick: number, division = 48) {
             if (tick === cTick) {
                 text += l;
                 for (; dot > 0; dot -= 1) {
-                    text += ".";
+                    text += '.';
                 }
                 return text;
             }
@@ -32,7 +33,9 @@ function getNoteLenForMML(tick: number, division = 48) {
     return `=${tick}`;
 }
 
-function render(sequences: { [key: number]: number[][]; }, paraList: number[][], otherPointers: number[]) {
+function render(
+    sequences: { [key: number]: number[][]; }, paraList: number[][], otherPointers: number[],
+) {
     let label = 1;
     let vTable = 1;
     let lastInstrument = 0;
@@ -41,7 +44,9 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
     otherPointers.forEach((e) => {
         callID[e] = null;
     });
-    function renderMML(sequence: number[][], handleSubroutine: boolean = false, channel: number = -1) {
+    function renderMML(
+        sequence: number[][], handleSubroutine: boolean = false, channel: number = -1,
+    ) {
         const content: string[][] = [];
         let current: string[] = [];
         let prevOctave = 0;
@@ -74,9 +79,9 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 if (prevOctave < 1) {
                     add(`o${octave}`);
                 } else if (octave > prevOctave) {
-                    add(">".repeat(octave - prevOctave));
+                    add('>'.repeat(octave - prevOctave));
                 } else if (octave < prevOctave) {
-                    add("<".repeat(prevOctave - octave));
+                    add('<'.repeat(prevOctave - octave));
                 }
                 prevOctave = octave;
                 add(`${notes[note % 12]}${getNoteLenForMML(noteLength)}`);
@@ -118,7 +123,7 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 add(`t${e[1]}`);
             } else if (h === 0xe6 && e[1] === 0x00) {
                 lineBreak();
-                add("[[");
+                add('[[');
                 lineBreak();
             } else if (h === 0xe6) {
                 lineBreak();
@@ -133,10 +138,10 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 if (handleSubroutine) {
                     const addr = BBuffer.prototype.readUInt16LE.call(e, 1);
                     lineBreak();
-                    let loopCall = "";
+                    let loopCall = '';
                     if (callID[addr] === null) {
                         callID[addr] = label;
-                        label++;
+                        label += 1;
                         loopCall = `[\n${renderMML(sequences[addr])}\n]`;
                     }
                     loopCall = `(${callID[addr]})${loopCall}${e[3]}`;
@@ -157,7 +162,7 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 const addr = BBuffer.prototype.readUInt16LE.call(e, 1);
                 if (callID[addr] === null) {
                     callID[addr] = label;
-                    label++;
+                    label += 1;
                     rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
                 }
                 if (e[4] === 0) {
@@ -177,10 +182,10 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
                 && !loopPut
                 && offset >= paraList[1][channel]) {
                 if (offset !== paraList[1][channel]) {
-                    throw new Error("Loop point position cuowei! ");
+                    throw new Error('Loop point position cuowei! ');
                 }
                 lineBreak();
-                add("/");
+                add('/');
                 lineBreak();
                 loopPut = true;
             }
@@ -190,19 +195,19 @@ function render(sequences: { [key: number]: number[][]; }, paraList: number[][],
         }
         const finalPrint: string[] = [];
         content.forEach((e) => {
-            finalPrint.push(e.join(" "));
+            finalPrint.push(e.join(' '));
         });
-        return finalPrint.join("\n");
+        return finalPrint.join('\n');
     }
-    let mml = "";
+    let mml = '';
     for (let i = 0; i < 8; i++) {
         if (paraList[0][i] !== 0) {
             mml += `#${i}\n`;
             mml += renderMML(sequences[paraList[0][i]], true, i);
-            mml += "\n\n";
+            mml += '\n\n';
         }
     }
-    mml = rmc.join("\n") + "\n\n" + mml;
+    mml = `${rmc.join('\n')}\n\n${mml}`;
     return {
         lastInstrument,
         mml,

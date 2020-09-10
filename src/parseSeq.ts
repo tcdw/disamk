@@ -1,5 +1,5 @@
-import { Buffer as BBuffer } from "buffer/";
-import { ParseMode } from "./parseMode";
+import { Buffer as BBuffer } from 'buffer/';
+import ParseMode from './parseMode';
 
 interface IParseResult {
     content: number[][];
@@ -11,7 +11,7 @@ function parseSeq(mode: ParseMode, aram: BBuffer, beginPointer: number): IParseR
     let aramAltered = false;
     const vcmdStart = 0xda;
     const vcmdLength = [
-                    0x02, 0x02, 0x03, 0x04, 0x04, 0x01, // DA-DF
+        0x02, 0x02, 0x03, 0x04, 0x04, 0x01, // DA-DF
         0x02, 0x03, 0x02, 0x03, 0x02, 0x04, 0x02, 0x02, // E0-E7
         0x03, 0x04, 0x02, 0x04, 0x04, 0x03, 0x02, 0x04, // E8-EF
         0x01, 0x04, 0x04, 0x03, 0x02, 0x09, 0x03, 0x04, // F0-F7
@@ -31,18 +31,18 @@ function parseSeq(mode: ParseMode, aram: BBuffer, beginPointer: number): IParseR
             // duration rate & velocity rate
             if (aram[nowPointer + 1] >= 0x1 && aram[nowPointer + 1] <= 0x7f) {
                 temp.push(aram[nowPointer + 1]);
-                nowPointer++;
+                nowPointer += 1;
             }
             content.push(temp);
-            nowPointer++;
+            nowPointer += 1;
         // note
         } else if (now >= 0x80 && now <= 0xc7) {
             content.push([now]);
-            nowPointer++;
+            nowPointer += 1;
         // percussion
         } else if (now >= 0xd0 && now <= 0xd9) {
             content.push([now]);
-            nowPointer++;
+            nowPointer += 1;
         // vcmd
         } else if (now >= vcmdStart && now <= 0xff) {
             const len = vcmdLength[now - vcmdStart];
@@ -77,7 +77,7 @@ function parseSeq(mode: ParseMode, aram: BBuffer, beginPointer: number): IParseR
                 // $ED $83 for direct ARAM code writing and executing...?!
                 // ...damn, I think I should not support this one for now
                 if (now === 0xED && aram[nowPointer + 1] === 0x83) {
-                    throw new Error("$ED $83 is unsupported due to the function of this command");
+                    throw new Error('$ED $83 is unsupported due to the function of this command');
                 }
                 // $E5 $80+ for custom sample calling
                 if (now === 0xE5 && aram[nowPointer + 1] >= 0x80) {

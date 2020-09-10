@@ -1,9 +1,9 @@
 // tslint:disable: object-literal-sort-keys
 
-import { Buffer as BBuffer } from "buffer/";
-import printBBuffer from "./printBuffer";
-import printByte from "./printByte";
-import SPCFile from "./SPCFile";
+import { Buffer as BBuffer } from 'buffer/';
+import printBBuffer from './printBuffer';
+import printByte from './printByte';
+import SPCFile from './SPCFile';
 
 export interface ISample {
     name: string;
@@ -16,26 +16,26 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
     let sampleRead: number = spcFile.dsp[0x5D] * 0x100;
     let sampleAmount = 0;
     let firstSample: number | undefined;
-    let header = "";
+    let header = '';
     function add(e: string) {
-        header += e + "\n";
+        header += `${e}\n`;
     }
     while (true) {
         const current = spcFile.aram.readUInt16LE(sampleRead);
-        if (typeof firstSample !== "undefined" && sampleRead >= firstSample) {
+        if (typeof firstSample !== 'undefined' && sampleRead >= firstSample) {
             break;
         }
-        if (typeof firstSample === "undefined") {
+        if (typeof firstSample === 'undefined') {
             firstSample = current;
         }
         sampleRead += 4;
-        sampleAmount++;
+        sampleAmount += 1;
     }
 
     // sample naming
     const samples: ISample[] = [];
-    add("#samples");
-    add("{");
+    add('#samples');
+    add('{');
     for (let i = 0; i < sampleAmount; i++) {
         const data = spcFile.getBRR(i);
         const name = `samp_${i}.brr`;
@@ -45,7 +45,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
         });
         add(`\t"${name}"`);
     }
-    add("}");
+    add('}');
     if (lastInstrument >= 0x1E) {
         const last = lastInstrument - 0x1E;
         const instList: string[] = [];
@@ -61,10 +61,10 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
             }
             instList.push(`\t${instHeader} ${printBBuffer(temp.slice(1))}`);
         }
-        add("#instruments");
-        add("{");
-        add(instList.join("\n"));
-        add("}");
+        add('#instruments');
+        add('{');
+        add(instList.join('\n'));
+        add('}');
     }
     return { header, samples };
 }

@@ -34,7 +34,7 @@ const base = {
             extensions: ['.js', '.ts'],
             namedExports: {
                 'js-sha256': ['sha256'],
-            }
+            },
         }),
         postCSS({
             extract: true,
