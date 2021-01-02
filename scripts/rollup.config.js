@@ -1,12 +1,12 @@
 import resolve from '@rollup/plugin-node-resolve';
 import replace from '@rollup/plugin-replace';
-import { uglify } from 'rollup-plugin-uglify';
 import progress from 'rollup-plugin-progress';
 import autoprefixer from 'autoprefixer';
-import clean from 'postcss-clean';
 import postCSS from 'rollup-plugin-postcss';
 import typescript from '@rollup/plugin-typescript';
 import commonjs from 'rollup-plugin-commonjs';
+import { terser } from 'rollup-plugin-terser';
+import cssnano from 'cssnano';
 
 const env = process.env.NODE_ENV;
 
@@ -40,13 +40,13 @@ const base = {
             extract: true,
             plugins: [
                 autoprefixer(),
-                clean(),
+                cssnano(),
             ],
         }),
         replace({
             'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
         }),
-        uglify(),
+        terser(),
     ],
 };
 
