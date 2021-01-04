@@ -51,6 +51,8 @@ function render(
         let current: string[] = [];
         let prevOctave = 0;
         let noteLength = 0;
+        let prevQ = 0;
+        let currentTotalTick = 0;
         let offset = paraList[0][channel] || 0;
         let loopPut = false;
 
@@ -71,7 +73,10 @@ function render(
             if (h >= 0x1 && h <= 0x7f) {
                 noteLength = h;
                 if (e.length > 1) {
-                    add(`q${printByte(e[1])}`);
+                    if (prevQ !== e[1]) {
+                        prevQ = e[1];
+                        add(`q${printByte(e[1])}`);
+                    }
                 }
             } else if (h >= 0x80 && h <= 0xc5) {
                 const note = h - 0x80;
@@ -85,23 +90,39 @@ function render(
                 }
                 prevOctave = octave;
                 add(`${notes[note % 12]}${getNoteLenForMML(noteLength)}`);
-                if (next[0] >= 0xda) {
+                currentTotalTick += noteLength;
+                if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
+                }
+                if (currentTotalTick >= 192) {
+                    currentTotalTick = 0;
                 }
             } else if (h === 0xc6) {
                 add(`^${getNoteLenForMML(noteLength)}`);
-                if (next[0] >= 0xda) {
+                currentTotalTick += noteLength;
+                if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
+                }
+                if (currentTotalTick >= 192) {
+                    currentTotalTick = 0;
                 }
             } else if (h === 0xc7) {
                 add(`r${getNoteLenForMML(noteLength)}`);
-                if (next[0] >= 0xda) {
+                currentTotalTick += noteLength;
+                if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
+                }
+                if (currentTotalTick >= 192) {
+                    currentTotalTick = 0;
                 }
             } else if (h >= 0xd0 && h <= 0xd9) {
                 add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength)}`);
-                if (next[0] >= 0xda) {
+                currentTotalTick += noteLength;
+                if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
+                }
+                if (currentTotalTick >= 192) {
+                    currentTotalTick = 0;
                 }
             } else if (h === 0xda) {
                 lineBreak();
