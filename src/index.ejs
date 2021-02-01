@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css">
 </head>
 <body>
     <div class="container">
@@ -14,13 +15,24 @@
             Error:
         </section>
         <section class="upload">
-            <input type="file" id="file-receiver">
-            <label class="button" for="file-receiver" id="upload-btn">Select SPC</label>
+            <form id="main-form">
+                <div class="mdui-textfield mdui-textfield-floating-label">
+                    <label class="mdui-textfield-label">Song ID</label>
+                    <input class="mdui-textfield-input" type="text" pattern="^\d+$" value="10" id="range" required>
+                    <div class="mdui-textfield-error">Please input a number</div>
+                    <div class="mdui-textfield-helper">Number is required. Range: 1-10</div>
+                </div>
+                <div class="buttons">
+                    <input type="file" id="file-receiver" hidden>
+                    <label class="mdui-btn mdui-ripple mdui-color-light-blue-700" for="file-receiver" id="upload-btn">Select SPC</label>
+                    <button class="mdui-btn mdui-ripple mdui-color-amber-500" type="submit">Start</button>
+                </div>
+            </form>
         </section>
         <section class="info">
             <div class="markdown-body">
                 <p>You can convert your AddmusicK 1.0.X SPC back into MML and BRR samples.</p>
-                <p>Click "Select SPC" button, select your SPC file, then the disassembled result will be downloaded automatically from your browser.</p>
+                <p>Select your SPC file and press Start, then the disassembled result will be downloaded automatically from your browser.</p>
                 <p><b>Only AddmusicK 1.0.X SPCs is supported.</b> For AddMusic 4.05/M/etc SPCs, use NintSPC.</p>
                 <h2>Important Notice</h2>
                 <p>This tool is purely frontend-based, which won't upload any data into our server. You 
@@ -29,7 +41,7 @@
         </section>
     </div>
     <footer>
-        &copy; 2020 tcdw
+        &copy; <%= new Date().getFullYear() %> tcdw
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/jszip@3.5.0/dist/jszip.min.js"></script>
 </body>
