@@ -66,6 +66,30 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
         add(instList.join('\n'));
         add('}');
     }
+    let spcAuthor = spcFile.mainHeader.toString('utf8', 0xB1, 0xD1);
+    let spcGame = spcFile.mainHeader.toString('utf8', 0x4E, 0x6E);
+    let spcTitle = spcFile.mainHeader.toString('utf8', 0x2E, 0x4E);
+    let spcComment = spcFile.mainHeader.toString('utf8', 0x7E, 0x9E);
+    if (spcAuthor.indexOf('\0') >= 0) {
+        spcAuthor = spcAuthor.slice(0, spcAuthor.indexOf('\0'));
+    }
+    if (spcGame.indexOf('\0') >= 0) {
+        spcGame = spcGame.slice(0, spcGame.indexOf('\0'));
+    }
+    if (spcTitle.indexOf('\0') >= 0) {
+        spcTitle = spcTitle.slice(0, spcTitle.indexOf('\0'));
+    }
+    if (spcComment.indexOf('\0') >= 0) {
+        spcComment = spcComment.slice(0, spcComment.indexOf('\0'));
+    }
+    const now = new Date();
+    add(`#spc
+{
+\t#author    "${spcAuthor}"
+\t#game      "${spcGame}"
+\t#comment   "${spcComment}"
+\t#title     "${spcTitle}"
+}`);
     return { header, samples };
 }
 

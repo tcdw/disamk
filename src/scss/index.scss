@@ -26,7 +26,7 @@ body {
     background-color: #fff;
     border-radius: 1em;
     box-sizing: border-box;
-    padding: 0 1em;
+    padding: 0 1.3em;
     box-shadow: rgba(0, 0, 0, 0.12) .25em .25em 1em .25em;
     & > header {
         text-align: center;
@@ -49,6 +49,9 @@ body {
     & > .upload {
         padding-bottom: 1em;
         border-bottom: 2px dashed #ddd;
+        .buttons {
+            padding-top: 0.4em;
+        }
     }
     & > .info {
         padding: 1em 0;

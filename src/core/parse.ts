@@ -10,7 +10,7 @@ export interface IParsed {
     samples: ISample[];
 }
 
-function parse(input: Uint8Array | ArrayBuffer, song: number = 10): IParsed {
+function parse(input: Uint8Array | ArrayBuffer, song: number = 10, absLen = false): IParsed {
     const spc = BBuffer.from(input);
     // 输入参数检查
     if (song < 1 || song > 10) {
@@ -110,7 +110,7 @@ function parse(input: Uint8Array | ArrayBuffer, song: number = 10): IParsed {
         sequences[e] = result.content;
     });
     otherPointers.push(...rest);
-    const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers);
+    const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers, absLen);
     const { header, samples } = handleSample(spcFile, songEntry + paraLen, lastInstrument);
     let mmlFile: string = '';
     if (vTable === 0) {

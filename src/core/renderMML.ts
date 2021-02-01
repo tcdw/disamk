@@ -6,36 +6,42 @@ import printByte from './printByte';
 
 const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
 
-// 改写自 https://github.com/loveemu/spc_converters_legacy/blob/master/nintspc/src/nintspc.c
-function getNoteLenForMML(tick: number, division = 48) {
-    const dotMax = 6;
-    const note = division * 4;
-    let l;
-    let dot;
-    let text = '';
-    for (l = 1; l <= note; l += 1) {
-        let cTick = 0;
-        for (dot = 0; dot <= dotMax; dot += 1) {
-            const ld = (l << dot);
-            if (note % ld) {
-                break;
-            }
-            cTick += note / ld;
-            if (tick === cTick) {
-                text += l;
-                for (; dot > 0; dot -= 1) {
-                    text += '.';
+function render(
+    sequences: { [key: number]: number[][]; },
+    paraList: number[][],
+    otherPointers: number[],
+    absLen: boolean,
+) {
+    // 改写自 https://github.com/loveemu/spc_converters_legacy/blob/master/nintspc/src/nintspc.c
+    function getNoteLenForMML(tick: number, division = 48) {
+        if (absLen) {
+            return `=${tick}`;
+        }
+        const dotMax = 6;
+        const note = division * 4;
+        let l;
+        let dot;
+        let text = '';
+        for (l = 1; l <= note; l += 1) {
+            let cTick = 0;
+            for (dot = 0; dot <= dotMax; dot += 1) {
+                const ld = (l << dot);
+                if (note % ld) {
+                    break;
                 }
-                return text;
+                cTick += note / ld;
+                if (tick === cTick) {
+                    text += l;
+                    for (; dot > 0; dot -= 1) {
+                        text += '.';
+                    }
+                    return text;
+                }
             }
         }
+        return `=${tick}`;
     }
-    return `=${tick}`;
-}
 
-function render(
-    sequences: { [key: number]: number[][]; }, paraList: number[][], otherPointers: number[],
-) {
     let label = 1;
     let vTable = 1;
     let lastInstrument = 0;
