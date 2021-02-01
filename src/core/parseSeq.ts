@@ -59,7 +59,7 @@ function parseSeq(aram: BBuffer, beginPointer: number): IParseResult {
             content.push([...temp]);
             nowPointer += len;
         } else {
-            throw new Error(`Unexpected command 0x${now} at 0x${nowPointer}`);
+            throw new Error(`Unexpected command 0x${now.toString(16)} at 0x${nowPointer.toString(16)}`);
         }
         // console.log(nowPointer.toString(16) + ": " + content[content.length - 1]);
     }

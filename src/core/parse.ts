@@ -60,7 +60,7 @@ function parse(input: Uint8Array | ArrayBuffer, song: number = 10, absLen = fals
             // logger.debug("Para list ends!");
             break;
         } else if (now > 0 && now <= 0x7f) {
-            throw new Error(`Unexcepted situation: Block command between 0x01-0x7F (${now} at 0x${
+            throw new Error(`Unexcepted situation: Block command between 0x01-0x7F (${now.toString(16)} at 0x${
                 (songEntry + paraOffset).toString(16)})`);
         } else if (now > 0x7f && now <= 0xff) {
             loop = (spcFile.aram.readUInt16LE(songEntry + paraOffset + 2) - songEntry) / 2;

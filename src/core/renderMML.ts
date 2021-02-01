@@ -193,12 +193,12 @@ function render(
                 if (callID[addr] === null) {
                     callID[addr] = label;
                     label += 1;
-                    rmc.push(`(!${callID[addr]})[${renderMML(sequences[addr])}]`);
+                    rmc.push(`(!${callID[addr] as number + 50000})[${renderMML(sequences[addr])}]`);
                 }
                 if (e[4] === 0) {
-                    add(`(!${callID[addr]}, ${BBuffer.prototype.readUInt8.call(e, 3)})`);
+                    add(`(!${callID[addr] as number + 50000}, ${BBuffer.prototype.readUInt8.call(e, 3)})`);
                 } else {
-                    add(`(!${callID[addr]}, ${BBuffer.prototype.readUInt8.call(e, 3)}, ${e[4]})`);
+                    add(`(!${callID[addr] as number + 50000}, ${BBuffer.prototype.readUInt8.call(e, 3)}, ${e[4]})`);
                 }
                 lineBreak();
             } else {
@@ -212,7 +212,7 @@ function render(
                 && !loopPut
                 && offset >= paraList[1][channel]) {
                 if (offset !== paraList[1][channel]) {
-                    throw new Error('Loop point position cuowei! ');
+                    throw new Error('Loop point malposition');
                 }
                 lineBreak();
                 add('/');
