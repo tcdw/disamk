@@ -49,5 +49,6 @@ module.exports = {
     ],
     externals: {
         jszip: 'JSZip',
+        mdui: 'mdui',
     },
 };
