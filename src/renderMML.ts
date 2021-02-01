@@ -126,7 +126,10 @@ function render(
                 }
             } else if (h === 0xda) {
                 lineBreak();
-                add(`@${e[1]} h0`);
+                add(`@${e[1]}`);
+                if (e[1] < 30) {
+                    add(' h0');
+                }
                 if (lastInstrument < e[1]) {
                     lastInstrument = e[1];
                 }
