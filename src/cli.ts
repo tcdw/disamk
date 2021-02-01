@@ -1,7 +1,7 @@
 import fs from 'fs-extra';
 import minimist from 'minimist';
 import path from 'path';
-import parse from './parse';
+import parse from './core/parse';
 
 const helpContent = `Usage: disamk [OPTIONS]
 

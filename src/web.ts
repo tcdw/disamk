@@ -1,5 +1,5 @@
 import JSZip from 'jszip';
-import parse from './parse';
+import parse from './core/parse';
 import './scss/index.scss';
 
 function handleUpload(name: string, spc: ArrayBuffer) {
