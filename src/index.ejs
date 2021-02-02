@@ -6,7 +6,7 @@
     <title><%= htmlWebpackPlugin.options.title %></title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css">
 </head>
-<body>
+<body class="mdui-theme-accent-mdui-color-teal-a400">
     <div class="container">
         <header>
             <h1>AddmusicK 1.0.X SPC Disassembler</h1>
@@ -18,8 +18,8 @@
             <form id="main-form">
                 <div class="mdui-textfield mdui-textfield-floating-label">
                     <label class="mdui-textfield-label">Song ID</label>
-                    <input class="mdui-textfield-input" type="text" pattern="^\d+$" value="10" id="range" required>
-                    <div class="mdui-textfield-error">Please input a number</div>
+                    <input class="mdui-textfield-input" type="text" pattern="^(10|[1-9])$" value="10" id="range" required>
+                    <div class="mdui-textfield-error">Please input a vaild number between 1-10</div>
                     <div class="mdui-textfield-helper">Number is required. Range: 1-10</div>
                 </div>
                 <label class="mdui-checkbox">
@@ -38,10 +38,16 @@
             <div class="markdown-body">
                 <p>You can convert your AddmusicK 1.0.X SPC back into MML and BRR samples.</p>
                 <p>Select your SPC file and press Start, then the disassembled result will be downloaded automatically from your browser.</p>
-                <p><b>Only AddmusicK 1.0.X SPCs is supported.</b> For AddMusic 4.05/M/etc SPCs, use NintSPC.</p>
+                <p><b>Only AddmusicK 1.0.X SPC is supported.</b> For AddMusic 4.05/M/etc SPC, use <a href="https://drive.google.com/drive/folders/0B6s5ZRAO2QlAS1RuSzRubm13OWM" target="_blank">NintSPC</a>.</p>
                 <h2>Important Notice</h2>
                 <p>This tool is purely frontend-based, which won't upload any data into our server. You 
                     can get source code <a href="https://gitlab.com/tcdw/disamk" target="_blank">here</a>.</p>
+                <h2>Open Source libraries used in this project</h2>
+                <ul>
+                    <li><a href="https://www.mdui.org/" target="_blank">MDUI</a> - A lightweight web user interface library</li>
+                    <li><a href="https://www.mdui.org/" target="_blank">JSZip</a> - For creating, reading and editing .zip files</li>
+                    <li><a href="https://github.com/feross/buffer" target="_blank">buffer</a> - The buffer module from <a href="https://nodejs.org" target="_blank">node.js</a>, for the browser</li>
+                </ul>
             </div>
         </section>
     </div>

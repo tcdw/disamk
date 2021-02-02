@@ -82,7 +82,6 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
     if (spcComment.indexOf('\0') >= 0) {
         spcComment = spcComment.slice(0, spcComment.indexOf('\0'));
     }
-    const now = new Date();
     add(`#spc
 {
 \t#author    "${spcAuthor}"
