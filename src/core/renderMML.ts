@@ -196,9 +196,9 @@ function render(
                     rmc.push(`(!${callID[addr] as number + 50000})[${renderMML(sequences[addr])}]`);
                 }
                 if (e[4] === 0) {
-                    add(`(!${callID[addr] as number + 50000}, ${BBuffer.prototype.readUInt8.call(e, 3)})`);
+                    add(`(!${callID[addr] as number + 50000}, ${BBuffer.prototype.readInt8.call(e, 3)})`);
                 } else {
-                    add(`(!${callID[addr] as number + 50000}, ${BBuffer.prototype.readUInt8.call(e, 3)}, ${e[4]})`);
+                    add(`(!${callID[addr] as number + 50000}, ${BBuffer.prototype.readInt8.call(e, 3)}, ${e[4]})`);
                 }
                 lineBreak();
             } else {

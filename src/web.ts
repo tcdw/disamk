@@ -38,7 +38,6 @@ function handleUpload(name: string, spc: ArrayBuffer) {
 
 file.addEventListener('change', () => {
     if (file.files !== null) {
-        const fileInfo = file.files[0];
         const fileName = file.files[0].name;
         uploadBtn.textContent = `Selected: ${fileName}`;
     }
