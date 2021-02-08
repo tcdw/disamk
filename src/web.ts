@@ -7,11 +7,15 @@ const form = document.getElementById('main-form') as HTMLFormElement;
 const error = document.getElementById('error') as HTMLDivElement;
 const range = document.getElementById('range') as HTMLInputElement;
 const absLen = document.getElementById('abs-len') as HTMLInputElement;
+const smwAlias = document.getElementById('smw-alias') as HTMLInputElement;
 const file = document.getElementById('file-receiver') as HTMLInputElement;
 const uploadBtn = document.getElementById('upload-btn') as HTMLLabelElement;
 
 function handleUpload(name: string, spc: ArrayBuffer) {
-    const { mmlFile, samples } = parse(spc, Number(range.value), !!absLen.checked);
+    const { mmlFile, samples } = parse(spc, Number(range.value), {
+        absLen: !!absLen.checked,
+        smwAlias: !!smwAlias.checked,
+    });
     const zip = new JSZip();
     const sampleDir = `${name}_samples`;
     zip.file(`${name}.txt`, `#amk 2\n#path "${sampleDir}"\n${mmlFile}`);

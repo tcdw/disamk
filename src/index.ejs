@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1">
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Ubuntu+Mono&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/mdui@1.0.1/dist/css/mdui.min.css">
 </head>
 <body class="mdui-theme-accent-mdui-color-teal-a400">
@@ -26,6 +27,11 @@
                     <input type="checkbox" id="abs-len">
                     <i class="mdui-checkbox-icon"></i>
                     Always output absolute note length
+                </label><br>
+                <label class="mdui-checkbox">
+                    <input type="checkbox" id="smw-alias" checked>
+                    <i class="mdui-checkbox-icon"></i>
+                    Use SMW instrument aliases in <code>#instruments</code>
                 </label>
                 <div class="buttons">
                     <input type="file" id="file-receiver" hidden>

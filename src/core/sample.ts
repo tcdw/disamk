@@ -12,7 +12,12 @@ export interface ISample {
 
 const smwRemap = [0, 1, 2, 3, 4, 8, 22, 5, 6, 7, 9, 10, 13, 14, 29, 21, 12, 17, 15];
 
-function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: number) {
+function handleSample(
+    spcFile: SPCFile,
+    instPointer: number,
+    lastInstrument: number,
+    smwAlias: boolean,
+) {
     let sampleRead: number = spcFile.dsp[0x5D] * 0x100;
     let sampleAmount = 0;
     let firstSample: number | undefined;
@@ -52,7 +57,7 @@ function handleSample(spcFile: SPCFile, instPointer: number, lastInstrument: num
         for (let i = 0; i <= last; i++) {
             const temp = spcFile.aram.slice(instPointer + (i * 6), instPointer + ((i + 1) * 6));
             let instHeader: string;
-            if (temp[0] <= 0x12) {
+            if (temp[0] <= 0x12 && smwAlias) {
                 instHeader = `@${smwRemap[temp[0]]}`;
             } else if (temp[0] >= 0x80 && temp[0] < 0xa0) {
                 instHeader = `n${printByte(temp[0] - 0x80)}`;

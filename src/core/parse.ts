@@ -10,7 +10,14 @@ export interface IParsed {
     samples: ISample[];
 }
 
-function parse(input: Uint8Array | ArrayBuffer, song: number = 10, absLen = false): IParsed {
+export interface Options {
+    absLen: boolean;
+    smwAlias: boolean;
+}
+
+function parse(input: Uint8Array | ArrayBuffer, song: number = 10, options: Options): IParsed {
+    const absLen = options.absLen;
+    const smwAlias = options.smwAlias;
     const spc = BBuffer.from(input);
     // 输入参数检查
     if (song < 1 || song > 10) {
@@ -111,7 +118,9 @@ function parse(input: Uint8Array | ArrayBuffer, song: number = 10, absLen = fals
     });
     otherPointers.push(...rest);
     const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers, absLen);
-    const { header, samples } = handleSample(spcFile, songEntry + paraLen, lastInstrument);
+    const { header, samples } = handleSample(
+        spcFile, songEntry + paraLen, lastInstrument, smwAlias,
+    );
     let mmlFile: string = '';
     if (vTable === 0) {
         mmlFile += '#option smwvtable\n';
