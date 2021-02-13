@@ -15,16 +15,13 @@ export interface Options {
     smwAlias: boolean;
 }
 
-function parse(input: Uint8Array | ArrayBuffer, song: number = 10, options: Options): IParsed {
+function parse(input: Uint8Array | ArrayBuffer, options: Options): IParsed {
     const absLen = options.absLen;
     const smwAlias = options.smwAlias;
     const spc = BBuffer.from(input);
-    // 输入参数检查
-    if (song < 1 || song > 10) {
-        throw new Error('Bad song ID! It must between 1-10!');
-    }
 
     const spcFile: SPCFile = new SPCFile(spc);
+    const song = spcFile.aram[0xF6];
     /*
     asl     a                           ; 1c
     mov     y, a                        ; fd
