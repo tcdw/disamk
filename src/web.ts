@@ -62,7 +62,7 @@ form.addEventListener('submit', (f) => {
                 handleUpload(fileInfo.name, e.target.result as ArrayBuffer);
             } catch (err) {
                 error.style.display = 'block';
-                error.textContent = err;
+                error.textContent = `${err}`;
             }
         }
     };

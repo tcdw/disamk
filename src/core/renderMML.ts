@@ -1,8 +1,8 @@
 /* eslint-disable no-bitwise */
 
-import { Buffer as BBuffer } from 'buffer/';
 import printBuffer from './printBuffer';
 import printByte from './printByte';
+import { readInt8, readUInt16LE } from './utils';
 
 const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
 
@@ -166,7 +166,7 @@ function render(
                 // add(`; ${printBBuffer(e)}    ; subroutine called`);
                 // lineBreak();
                 if (handleSubroutine) {
-                    const addr = BBuffer.prototype.readUInt16LE.call(e, 1);
+                    const addr = readUInt16LE(e, 1);
                     lineBreak();
                     let loopCall = '';
                     if (callID[addr] === null) {
@@ -189,16 +189,16 @@ function render(
                 // lineBreak();
                 // add(`; ${printBBuffer(e)}    ; rmc called`);
                 lineBreak();
-                const addr = BBuffer.prototype.readUInt16LE.call(e, 1);
+                const addr = readUInt16LE(e, 1);
                 if (callID[addr] === null) {
                     callID[addr] = label;
                     label += 1;
                     rmc.push(`(!${callID[addr] as number + 50000})[${renderMML(sequences[addr])}]`);
                 }
                 if (e[4] === 0) {
-                    add(`(!${callID[addr] as number + 50000}, ${BBuffer.prototype.readInt8.call(e, 3)})`);
+                    add(`(!${callID[addr] as number + 50000}, ${readInt8(e, 3)})`);
                 } else {
-                    add(`(!${callID[addr] as number + 50000}, ${BBuffer.prototype.readInt8.call(e, 3)}, ${e[4]})`);
+                    add(`(!${callID[addr] as number + 50000}, ${readInt8(e, 3)}, ${e[4]})`);
                 }
                 lineBreak();
             } else {

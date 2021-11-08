@@ -1,11 +1,11 @@
-import { Buffer as BBuffer } from 'buffer/';
+import { readUInt16LE } from "./utils";
 
 interface IParseResult {
     content: number[][];
     jumps: number[];
 }
 
-function parseSeq(aram: BBuffer, beginPointer: number): IParseResult {
+function parseSeq(aram: Uint8Array, beginPointer: number): IParseResult {
     const vcmdStart = 0xda;
     const vcmdLength = [
         0x02, 0x02, 0x03, 0x04, 0x04, 0x01, // DA-DF
@@ -46,16 +46,17 @@ function parseSeq(aram: BBuffer, beginPointer: number): IParseResult {
 
             // special: e9 [xx yy] zz
             if (now === 0xe9) {
-                jumps.push(aram.readUInt16LE(nowPointer + 1));
+                jumps.push(readUInt16LE(aram, nowPointer + 1));
             }
 
             // special: fc [ww xx] yy zz
             if (now === 0xfc) {
-                jumps.push(aram.readUInt16LE(nowPointer + 1));
+                jumps.push(readUInt16LE(aram, nowPointer + 1));
             }
 
-            const temp = BBuffer.alloc(len);
-            aram.copy(temp, 0, nowPointer, nowPointer + len);
+            // 把 nowPointer 到 nowPointer + len 的一段复制成新的数组
+            const temp = aram.slice(nowPointer, nowPointer + len);
+            // aram.copy(temp, 0, nowPointer, nowPointer + len);
             content.push([...temp]);
             nowPointer += len;
         } else {

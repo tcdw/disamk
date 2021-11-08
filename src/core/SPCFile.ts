@@ -1,45 +1,38 @@
-import { Buffer as BBuffer } from 'buffer/';
+import { readUInt16LE, writeUInt16LE } from './utils'
 
 class SPCFile {
-    public mainHeader: BBuffer;
+  public mainHeader: Uint8Array;
+  public extraHeader: Uint8Array;
+  public aram: Uint8Array;
+  public dsp: Uint8Array;
 
-    public extraHeader: BBuffer;
+  constructor(buffer: Uint8Array) {
+    this.mainHeader = buffer.slice(0, 0x100)
+    this.extraHeader = buffer.slice(0x10200)
+    this.aram = buffer.slice(0x100, 0x10100)
+    this.dsp = buffer.slice(0x10100, 0x10180)
+  }
 
-    public aram: BBuffer;
-
-    public dsp: BBuffer;
-
-    constructor(buffer: BBuffer) {
-        this.mainHeader = BBuffer.alloc(0x100);
-        this.extraHeader = BBuffer.alloc(buffer.length - 0x10200);
-        this.aram = BBuffer.alloc(0x10000);
-        this.dsp = BBuffer.alloc(0x80);
-        buffer.copy(this.mainHeader, 0, 0, 0x100);
-        buffer.copy(this.extraHeader, 0, 0x10200, buffer.length - 0x10200);
-        buffer.copy(this.aram, 0, 0x100, 0x10100);
-        buffer.copy(this.dsp, 0, 0x10100, 0x10180);
+  public getBRR(id: number): Uint8Array {
+    const sampleIndexPtr = this.dsp[0x5D] * 0x100
+    const samplePtr = readUInt16LE(this.aram, sampleIndexPtr + id * 4)
+    const sampleLoop = readUInt16LE(this.aram, sampleIndexPtr + id * 4 + 2) - samplePtr
+    let sampleCurrentPtr = samplePtr
+    while (true) {
+      sampleCurrentPtr += 9
+      if ((sampleCurrentPtr !== samplePtr + 9) && this.aram[sampleCurrentPtr - 9] % 2 === 1) {
+        break
+      }
+      if (sampleCurrentPtr > 0xFFFF) {
+        throw new Error(`Sample ${id.toString()}'s size exceeded (Probably a bad sample)`)
+      }
     }
-
-    public getBRR(id: number): BBuffer {
-        const sampleIndexPtr = this.dsp[0x5D] * 0x100;
-        const samplePtr = this.aram.readUInt16LE(sampleIndexPtr + id * 4);
-        const sampleLoop = this.aram.readUInt16LE(sampleIndexPtr + id * 4 + 2) - samplePtr;
-        let sampleCurrentPtr = samplePtr;
-        while (true) {
-            sampleCurrentPtr += 9;
-            if ((sampleCurrentPtr !== samplePtr + 9) && this.aram[sampleCurrentPtr - 9] % 2 === 1) {
-                break;
-            }
-            if (sampleCurrentPtr > 0xFFFF) {
-                throw new Error(`Sample ${id.toString()}'s size exceeded (Probably a bad sample)`);
-            }
-        }
-        const sampleLength = sampleCurrentPtr - samplePtr;
-        const brr = BBuffer.alloc(sampleLength + 2);
-        brr.writeUInt16LE(sampleLoop, 0);
-        this.aram.copy(brr, 2, samplePtr, sampleCurrentPtr);
-        return brr;
-    }
+    const sampleLength = sampleCurrentPtr - samplePtr
+    const brr = new Uint8Array(sampleLength + 2)
+    writeUInt16LE(brr, 0, sampleLoop)
+    brr.set(this.aram.slice(samplePtr, sampleCurrentPtr), 2)
+    return brr
+  }
 }
 
-export default SPCFile;
+export default SPCFile

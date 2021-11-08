@@ -1,13 +1,12 @@
-// tslint:disable: object-literal-sort-keys
-
-import { Buffer as BBuffer } from 'buffer/';
 import printBBuffer from './printBuffer';
 import printByte from './printByte';
 import SPCFile from './SPCFile';
+import { utf8ArrayToStr } from './utf8-to-str';
+import { readUInt16LE } from './utils';
 
 export interface ISample {
     name: string;
-    data: BBuffer;
+    data: Uint8Array;
 }
 
 const smwRemap = [0, 1, 2, 3, 4, 8, 22, 5, 6, 7, 9, 10, 13, 14, 29, 21, 12, 17, 15];
@@ -26,7 +25,7 @@ function handleSample(
         header += `${e}\n`;
     }
     while (true) {
-        const current = spcFile.aram.readUInt16LE(sampleRead);
+        const current = readUInt16LE(spcFile.aram, sampleRead);
         if (typeof firstSample !== 'undefined' && sampleRead >= firstSample) {
             break;
         }
@@ -71,10 +70,10 @@ function handleSample(
         add(instList.join('\n'));
         add('}');
     }
-    let spcAuthor = spcFile.mainHeader.toString('utf8', 0xB1, 0xD1);
-    let spcGame = spcFile.mainHeader.toString('utf8', 0x4E, 0x6E);
-    let spcTitle = spcFile.mainHeader.toString('utf8', 0x2E, 0x4E);
-    let spcComment = spcFile.mainHeader.toString('utf8', 0x7E, 0x9E);
+    let spcAuthor = utf8ArrayToStr(spcFile.mainHeader.slice(0xB1, 0xD1));
+    let spcGame = utf8ArrayToStr(spcFile.mainHeader.slice(0x4E, 0x6E));
+    let spcTitle = utf8ArrayToStr(spcFile.mainHeader.slice(0x2E, 0x4E));
+    let spcComment = utf8ArrayToStr(spcFile.mainHeader.slice(0x7E, 0x9E));
     if (spcAuthor.indexOf('\0') >= 0) {
         spcAuthor = spcAuthor.slice(0, spcAuthor.indexOf('\0'));
     }
