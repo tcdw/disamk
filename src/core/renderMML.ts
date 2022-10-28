@@ -50,9 +50,7 @@ function render(
     otherPointers.forEach((e) => {
         callID[e] = null;
     });
-    function renderMML(
-        sequence: number[][], handleSubroutine: boolean = false, channel: number = -1,
-    ) {
+    function renderMML(sequence: number[][], handleSubroutine = false, channel: number = -1) {
         const content: string[][] = [];
         let current: string[] = [];
         let prevOctave = 0;
@@ -76,7 +74,9 @@ function render(
         sequence.forEach((e, i) => {
             const h = e[0];
             const next = sequence[i + 1] || {};
-            if (h >= 0x1 && h <= 0x7f) {
+
+            switch (true) {
+            case h >= 0x1 && h <= 0x7f: {
                 noteLength = h;
                 if (e.length > 1) {
                     if (prevQ !== e[1]) {
@@ -84,7 +84,9 @@ function render(
                         add(`q${printByte(e[1])}`);
                     }
                 }
-            } else if (h >= 0x80 && h <= 0xc5) {
+                break;
+            }
+            case h >= 0x80 && h <= 0xc5: {
                 const note = h - 0x80;
                 const octave = Math.floor((h - 0x80) / 12) + 1;
                 if (prevOctave < 1) {
@@ -103,7 +105,9 @@ function render(
                 if (currentTotalTick >= 192) {
                     currentTotalTick = 0;
                 }
-            } else if (h === 0xc6) {
+                break;
+            }
+            case h === 0xc6: {
                 add(`^${getNoteLenForMML(noteLength)}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
@@ -112,7 +116,9 @@ function render(
                 if (currentTotalTick >= 192) {
                     currentTotalTick = 0;
                 }
-            } else if (h === 0xc7) {
+                break;
+            }
+            case h === 0xc7: {
                 add(`r${getNoteLenForMML(noteLength)}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
@@ -121,7 +127,9 @@ function render(
                 if (currentTotalTick >= 192) {
                     currentTotalTick = 0;
                 }
-            } else if (h >= 0xd0 && h <= 0xd9) {
+                break;
+            }
+            case h >= 0xd0 && h <= 0xd9: {
                 add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength)}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
@@ -130,7 +138,9 @@ function render(
                 if (currentTotalTick >= 192) {
                     currentTotalTick = 0;
                 }
-            } else if (h === 0xda) {
+                break;
+            }
+            case h === 0xda: {
                 lineBreak();
                 add(`@${e[1]}`);
                 if (e[1] < 30) {
@@ -139,7 +149,9 @@ function render(
                 if (lastInstrument < e[1]) {
                     lastInstrument = e[1];
                 }
-            } else if (h === 0xdb) {
+                break;
+            }
+            case h === 0xdb: {
                 if (e[1] <= 20) {
                     add(`y${e[1]}`);
                 } else {
@@ -147,21 +159,33 @@ function render(
                     const echoR = (e[1] >> 6) % 2;
                     add(`y${e[1] % 0x40},${echoL},${echoR}`);
                 }
-            } else if (h === 0xe0) {
+                break;
+            }
+            case h === 0xe0: {
                 add(`w${e[1]}`);
-            } else if (h === 0xe2) {
+                break;
+            }
+            case h === 0xe2: {
                 add(`t${e[1]}`);
-            } else if (h === 0xe6 && e[1] === 0x00) {
+                break;
+            }
+            case h === 0xe6 && e[1] === 0x00: {
                 lineBreak();
                 add('[[');
                 lineBreak();
-            } else if (h === 0xe6) {
+                break;
+            }
+            case h === 0xe6: {
                 lineBreak();
                 add(`]]${e[1] + 1}`);
                 lineBreak();
-            } else if (h === 0xe7) {
+                break;
+            }
+            case h === 0xe7: {
                 add(`v${e[1]}`);
-            } else if (h === 0xe9) {
+                break;
+            }
+            case h === 0xe9: {
                 // lineBreak();
                 // add(`; ${printBBuffer(e)}    ; subroutine called`);
                 // lineBreak();
@@ -179,13 +203,19 @@ function render(
                     lineBreak();
                     prevOctave = 0;
                 }
-            } else if (h === 0xfa && e[1] === 0x04) {
+                break;
+            }
+            case h === 0xfa && e[1] === 0x04: {
                 // lineBreak();
                 // add(`; ${printBBuffer(e)}    ; echo BBuffer: ${e[2] * 0x0800}`);
                 // lineBreak();
-            } else if (h === 0xfa && e[1] === 0x06) {
+                break;
+            }
+            case h === 0xfa && e[1] === 0x06: {
                 vTable = e[2];
-            } else if (h === 0xfc) {
+                break;
+            }
+            case h === 0xfc: {
                 // lineBreak();
                 // add(`; ${printBBuffer(e)}    ; rmc called`);
                 lineBreak();
@@ -201,9 +231,13 @@ function render(
                     add(`(!${callID[addr] as number + 50000}, ${readInt8(e, 3)}, ${e[4]})`);
                 }
                 lineBreak();
-            } else {
+                break;
+            }
+            default: {
                 add(printBuffer(e));
                 lineBreak();
+                break;
+            }
             }
             offset += e.length;
             if (channel >= 0

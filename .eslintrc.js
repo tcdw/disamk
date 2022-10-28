@@ -30,6 +30,7 @@ module.exports = {
         'prefer-destructuring': 'off',
         'no-continue': 'off',
         'no-constant-condition': 'off',
+        'no-param-reassign': 'off',
     },
     settings: {
         'import/resolver': {
