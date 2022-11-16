@@ -1,6 +1,8 @@
 import JSZip from 'jszip';
 import mdui from 'mdui';
 import parse from './core/parse';
+import 'normalize.css/normalize.css';
+import '@sukka/markdown.css/dist/markdown.css';
 import './scss/index.scss';
 
 const form = document.getElementById('main-form') as HTMLFormElement;

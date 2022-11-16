@@ -5,3 +5,4 @@ test.sh
 dist-web/*.js
 dist-web/*.css
 dist-web/*.map
+.DS_Store
