@@ -1,7 +1,6 @@
 import printBBuffer from './printBuffer';
 import printByte from './printByte';
 import SPCFile from './SPCFile';
-import { utf8ArrayToStr } from './utf8-to-str';
 import { readUInt16LE } from './utils';
 
 export interface ISample {
@@ -70,10 +69,11 @@ function handleSample(
         add(instList.join('\n'));
         add('}');
     }
-    let spcAuthor = utf8ArrayToStr(spcFile.mainHeader.slice(0xB1, 0xD1));
-    let spcGame = utf8ArrayToStr(spcFile.mainHeader.slice(0x4E, 0x6E));
-    let spcTitle = utf8ArrayToStr(spcFile.mainHeader.slice(0x2E, 0x4E));
-    let spcComment = utf8ArrayToStr(spcFile.mainHeader.slice(0x7E, 0x9E));
+    const reader = new TextDecoder('utf-8');
+    let spcAuthor = reader.decode(spcFile.mainHeader.slice(0xB1, 0xD1));
+    let spcGame = reader.decode(spcFile.mainHeader.slice(0x4E, 0x6E));
+    let spcTitle = reader.decode(spcFile.mainHeader.slice(0x2E, 0x4E));
+    let spcComment = reader.decode(spcFile.mainHeader.slice(0x7E, 0x9E));
     if (spcAuthor.indexOf('\0') >= 0) {
         spcAuthor = spcAuthor.slice(0, spcAuthor.indexOf('\0'));
     }
