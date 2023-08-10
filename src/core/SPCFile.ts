@@ -27,7 +27,10 @@ class SPCFile {
                 break;
             }
             if (sampleCurrentPtr > 0xFFFF) {
-                throw new Error(`Sample ${id.toString()}'s size exceeded (Probably a bad sample)`);
+                sampleCurrentPtr -= 9;
+                // eslint-disable-next-line no-console
+                console.warn(`Sample ${id.toString(16)}'s size exceeded (Probably a bad sample)`);
+                break;
             }
         }
         const sampleLength = sampleCurrentPtr - samplePtr;

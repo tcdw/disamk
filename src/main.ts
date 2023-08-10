@@ -14,8 +14,8 @@ const uploadBtn = document.getElementById('upload-btn') as HTMLLabelElement;
 
 function handleUpload(name: string, spc: ArrayBuffer) {
     const { mmlFile, samples } = parse(spc, {
-        absLen: !!absLen.checked,
-        smwAlias: !!smwAlias.checked,
+        absLen: absLen.checked,
+        smwAlias: smwAlias.checked,
     });
     const zip = new JSZip();
     const sampleDir = `${name}_samples`;

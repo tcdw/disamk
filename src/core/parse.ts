@@ -59,7 +59,7 @@ function parse(input: ArrayBuffer, options: Options): IParsed {
             // logger.debug("Para list ends!");
             break;
         } else if (now > 0 && now <= 0x7f) {
-            throw new Error(`Unexcepted situation: Block command between 0x01-0x7F (${now.toString(16)} at 0x${
+            throw new Error(`Unexpected situation: Block command between 0x01-0x7F (${now.toString(16)} at 0x${
                 (songEntry + paraOffset).toString(16)})`);
         } else if (now > 0x7f && now <= 0xff) {
             // loop = (readUInt16LE(spcFile.aram, songEntry + paraOffset + 2) - songEntry) / 2;
