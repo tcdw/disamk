@@ -66,7 +66,7 @@ function parseSeq(aram: Uint8Array, beginPointer: number): IParseResult {
             }
 
             // special: fb xx (< $80) yy [...zz], xx is amount of zz
-            if (now === 0xfb) {
+            if (now === 0xfb && aram[nowPointer + 1] < 0x80) {
                 len += aram[nowPointer + 1] - 1;
             }
 
