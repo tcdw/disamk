@@ -12,7 +12,7 @@ function parseSeq(aram: Uint8Array, beginPointer: number): IParseResult {
         0x02, 0x03, 0x02, 0x03, 0x02, 0x04, 0x02, 0x02, // E0-E7
         0x03, 0x04, 0x02, 0x04, 0x04, 0x03, 0x02, 0x04, // E8-EF
         0x01, 0x04, 0x04, 0x03, 0x02, 0x09, 0x03, 0x04, // F0-F7
-        0x02, 0x03, 0x03, 0x03, 0x05, 0x00, 0x00, 0x00, // F8-FF
+        0x02, 0x03, 0x03, 0x04, 0x05, 0x00, 0x00, 0x00, // F8-FF
     ];
     const content: number[][] = [];
     const jumps: number[] = [];
@@ -53,7 +53,7 @@ function parseSeq(aram: Uint8Array, beginPointer: number): IParseResult {
         }
         // commands
         case now >= vcmdStart && now <= 0xff: {
-            const len = vcmdLength[now - vcmdStart];
+            let len = vcmdLength[now - vcmdStart];
 
             // special: e9 [xx yy] zz
             if (now === 0xe9) {
@@ -63,6 +63,11 @@ function parseSeq(aram: Uint8Array, beginPointer: number): IParseResult {
             // special: fc [ww xx] yy zz
             if (now === 0xfc) {
                 jumps.push(readUInt16LE(aram, nowPointer + 1));
+            }
+
+            // special: fb xx (< $80) yy [...zz], xx is amount of zz
+            if (now === 0xfb) {
+                len += aram[nowPointer + 1] - 1;
             }
 
             // 把 nowPointer 到 nowPointer + len 的一段复制成新的数组
