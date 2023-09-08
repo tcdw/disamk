@@ -1,3 +1,6 @@
+/* eslint-disable no-control-regex */
+// noinspection GrazieInspection
+
 import jsmidgen from 'jsmidgen';
 import parseSeq from './parseSeq';
 import render from './renderMML';
@@ -16,6 +19,8 @@ export interface Options {
     smwAlias: boolean;
     removeLoop?: boolean;
 }
+
+// F0 02 08 10 FD F6 __ __ D5 11 02 09 48 5C
 
 function parse(input: ArrayBuffer, options: Options): IParsed {
     const { absLen, smwAlias, removeLoop } = options;
@@ -36,16 +41,36 @@ function parse(input: ArrayBuffer, options: Options): IParsed {
     // 搜索 sequence list
     const reader = new TextDecoder('latin1');
     const stringBinary = reader.decode(spcFile.aram);
-    // eslint-disable-next-line no-control-regex
     const matched = /\xf6[\x00-\xff]{2}\x2d\xc4\x40\xf6[\x00-\xff]{2}\x2d\xc4\x41/.exec(stringBinary);
     if (!matched) {
-        throw new Error('Unable to find song pointers');
+        throw new Error('Unable to find song pointer');
     }
     const pointerA = readUInt16LE(spcFile.aram, matched.index + 1) + 2;
     const pointerB = readUInt16LE(spcFile.aram, matched.index + 7) + 1;
     if (pointerA !== pointerB) {
         throw new Error('Bad song pointers');
     }
+
+    // 搜索音量换算表
+    /*
+    beq    +                            ; F0 02
+    or     a, #$10                      ; 08 10
+    +                                   ;
+    mov    y, a                         ; FD
+    mov    a, VelocityValues+y          ; F6 __ __
+    mov    $0211+x, a                   ; D5 11 02
+    or     ($5c), ($48)                 ; 09 48 5C
+    */
+    const velocityMatched = /\xF0\x02\x08\x10\xFD\xF6[\x00-\xff]{2}\xD5\x11\x02\x09\x48\x5C/.exec(stringBinary);
+    if (!velocityMatched) {
+        throw new Error('Unable to find velocity table pointer');
+    }
+    const velocityPointer = readUInt16LE(spcFile.aram, velocityMatched.index + 6);
+    const velocityTable = [
+        spcFile.aram.slice(velocityPointer, velocityPointer + 0x10),
+        spcFile.aram.slice(velocityPointer + 0x10, velocityPointer + 0x20),
+    ];
+
     // 对一个 song 的解析
     const songEntry = readUInt16LE(spcFile.aram, pointerA + ((song - 1) * 2));
     // logger.info(`Using song ${song} at 0x${songEntry.toString(16)}`);
@@ -119,6 +144,7 @@ function parse(input: ArrayBuffer, options: Options): IParsed {
         otherPointers,
         absLen,
         removeLoop,
+        velocityTable,
     });
     const { header, samples } = handleSample(
         spcFile,

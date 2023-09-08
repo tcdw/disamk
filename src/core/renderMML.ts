@@ -15,6 +15,7 @@ function render(options: {
     otherPointers: number[]
     absLen: boolean
     removeLoop?: boolean
+    velocityTable: Uint8Array[]
 }) {
     const {
         sequences, paraList, otherPointers, absLen,
@@ -385,6 +386,12 @@ function render(options: {
         let isNoteOn = false;
         // 当前音色
         let currentInstrument = 0;
+        // 当前音符属性
+        let currentNoteParam = 0x7f;
+        // 当前音符音量换算表
+        let currentVelocityIndex = 0;
+        // 当前音符音量
+        let currentVelocity = 127;
 
         sequence.forEach((e, i) => {
             const h = e[0];
@@ -394,17 +401,21 @@ function render(options: {
             case h >= 0x1 && h <= 0x7f: {
                 // note param
                 currentNoteLength = e[0] * tickScale;
+                if (e.length > 1) {
+                    currentNoteParam = e[1];
+                }
                 break;
             }
             case h >= 0x80 && h <= 0xc5: {
                 if (isNoteOn) {
-                    track.addNoteOff(channel, lastNote, holdLength);
+                    track.addNoteOff(channel, lastNote, holdLength, currentVelocity);
                     isNoteOn = false;
                     holdLength = 0;
                 }
                 const note = h - 0x80;
                 lastNote = note + 12 + (transportSMWInstrument[currentInstrument] ?? 0);
-                track.addNoteOn(channel, lastNote, holdLength);
+                currentVelocity = (options.velocityTable[currentVelocityIndex][currentNoteParam & 0xF] / 255) * 127;
+                track.addNoteOn(channel, lastNote, holdLength, currentVelocity);
                 isNoteOn = true;
                 holdLength = currentNoteLength;
                 break;
@@ -417,7 +428,7 @@ function render(options: {
             case h === 0xc7: {
                 // rest
                 if (isNoteOn) {
-                    track.addNoteOff(channel, lastNote, holdLength);
+                    track.addNoteOff(channel, lastNote, holdLength, currentVelocity);
                     isNoteOn = false;
                     lastNote = -1;
                     holdLength = currentNoteLength;
@@ -428,14 +439,15 @@ function render(options: {
             }
             case h >= 0xd0 && h <= 0xd9: {
                 if (isNoteOn) {
-                    track.addNoteOff(channel, lastNote, holdLength);
+                    track.addNoteOff(channel, lastNote, holdLength, currentVelocity);
                     isNoteOn = false;
                     holdLength = 0;
                 }
                 track.setInstrument(channel, (h - 0xd0 + 21) as MidiParameterValue, holdLength);
                 currentInstrument = h - 0xd0 + 21;
                 lastNote = 60;
-                track.addNoteOn(channel, lastNote, 0);
+                currentVelocity = (options.velocityTable[currentVelocityIndex][currentNoteParam & 0xF] / 255) * 127;
+                track.addNoteOn(channel, lastNote, 0, currentVelocity);
                 isNoteOn = true;
                 holdLength = currentNoteLength;
                 break;
@@ -466,7 +478,7 @@ function render(options: {
                 break;
             }
             case h === 0xfa && e[1] === 0x06: {
-                vTable = e[2];
+                currentVelocityIndex = e[2];
                 break;
             }
             default: {
@@ -477,7 +489,7 @@ function render(options: {
 
         // cleanup
         if (isNoteOn) {
-            track.addNoteOff(channel, lastNote, holdLength);
+            track.addNoteOff(channel, lastNote, holdLength, currentVelocity);
             isNoteOn = false;
         }
     }
