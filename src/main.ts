@@ -29,6 +29,7 @@ function handleUpload(name: string, spc: ArrayBuffer) {
     const { mmlFile, samples, midiFile } = parse(spc, {
         absLen: absLen.checked,
         smwAlias: smwAlias.checked,
+        removeLoop: false,
     });
     const zip = new JSZip();
     const sampleDir = `${name}_samples`;

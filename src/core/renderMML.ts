@@ -7,12 +7,16 @@ import { printParsedBuffer, readInt8, readUInt16LE } from './utils';
 
 const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
 
-function render(
-    sequences: { [key: number]: number[][]; },
-    paraList: number[][],
-    otherPointers: number[],
-    absLen: boolean,
-) {
+function render(options: {
+    sequences: Record<number, number[][]>
+    paraList: number[][]
+    otherPointers: number[]
+    absLen: boolean
+    removeLoop?: boolean
+}) {
+    const {
+        sequences, paraList, otherPointers, absLen,
+    } = options;
     // 改写自 https://github.com/loveemu/spc_converters_legacy/blob/master/nintspc/src/nintspc.c
     function getNoteLenForMML(tick: number, division = 48) {
         if (absLen) {
@@ -53,7 +57,13 @@ function render(
         callID[e] = null;
     });
 
-    function renderMML(sequence: number[][], handleSubroutine = false, channel: number = -1) {
+    function renderMML(subOptions: {
+        sequence: number[][]
+        handleSubroutine?: boolean
+        channel?: number
+    }) {
+        const { sequence, handleSubroutine } = subOptions;
+        const channel = subOptions.channel ?? -1;
         const content: string[][] = [];
         let current: string[] = [];
         let prevOctave = 0;
@@ -199,7 +209,9 @@ function render(
                     if (callID[addr] === null) {
                         callID[addr] = label;
                         label += 1;
-                        loopCall = `[\n${renderMML(sequences[addr])}\n]`;
+                        loopCall = `[\n${renderMML({
+                            sequence: sequences[addr],
+                        })}\n]`;
                     }
                     loopCall = `(${callID[addr]})${loopCall}${e[3]}`;
                     add(loopCall);
@@ -226,7 +238,7 @@ function render(
                 if (callID[addr] === null) {
                     callID[addr] = label;
                     label += 1;
-                    rmc.push(`(!${callID[addr] as number + 50000})[${renderMML(sequences[addr])}]`);
+                    rmc.push(`(!${callID[addr] as number + 50000})[${renderMML({ sequence: sequences[addr] })}]`);
                 }
                 if (e[4] === 0) {
                     add(`(!${callID[addr] as number + 50000}, ${readInt8(e, 3)})`);
@@ -243,18 +255,21 @@ function render(
             }
             }
             offset += e.length;
-            if (channel >= 0
-                && paraList.length > 1
-                && paraList[1][channel] !== paraList[0][channel]
-                && !loopPut
-                && offset >= paraList[1][channel]) {
-                if (offset !== paraList[1][channel]) {
-                    throw new Error('Loop point malposition');
+
+            if (!options.removeLoop) {
+                if (channel >= 0
+                    && paraList.length > 1
+                    && paraList[1][channel] !== paraList[0][channel]
+                    && !loopPut
+                    && offset >= paraList[1][channel]) {
+                    if (offset !== paraList[1][channel]) {
+                        throw new Error('Loop point malposition');
+                    }
+                    lineBreak();
+                    add('/');
+                    lineBreak();
+                    loopPut = true;
                 }
-                lineBreak();
-                add('/');
-                lineBreak();
-                loopPut = true;
             }
         });
         if (current.length > 0) {
@@ -267,7 +282,11 @@ function render(
         return finalPrint.join('\n');
     }
 
-    function flattenSequenceData(sequence: number[][], handleSubroutine = false, channel: number = -1) {
+    function flattenSequenceData(subOptions: {
+        sequence: number[][]
+        handleSubroutine?: boolean
+    }) {
+        const { sequence, handleSubroutine } = subOptions;
         const rebuiltData: number[][] = [];
         let loopLeft = -1;
         let repeatPointStart = 0;
@@ -300,7 +319,9 @@ function render(
             case h === 0xe9: {
                 if (handleSubroutine) {
                     const addr = readUInt16LE(e, 1);
-                    const data = flattenSequenceData(sequences[addr]);
+                    const data = flattenSequenceData({
+                        sequence: sequences[addr],
+                    });
                     for (let j = 0; j < e[3]; j++) {
                         rebuiltData.push(...data);
                     }
@@ -350,11 +371,23 @@ function render(
     for (let i = 0; i < 8; i++) {
         if (paraList[0][i] !== 0) {
             mml += `#${i}\n`;
-            mml += renderMML(sequences[paraList[0][i]], true, i);
+            if (options.removeLoop) {
+                mml += renderMML({
+                    sequence: flattenSequenceData({
+                        sequence: sequences[paraList[0][i]],
+                        handleSubroutine: true,
+                    }),
+                    channel: i,
+                    handleSubroutine: true,
+                });
+            } else {
+                mml += renderMML({
+                    sequence: sequences[paraList[0][i]],
+                    channel: i,
+                    handleSubroutine: true,
+                });
+            }
             mml += '\n\n';
-
-            flattenSequenceData(sequences[paraList[0][i]], true, i);
-
             /* const track = new jsmidgen.Track();
             renderMIDI({
                 sequence: sequences[paraList[0][i]],

@@ -14,11 +14,11 @@ export interface IParsed {
 export interface Options {
     absLen: boolean;
     smwAlias: boolean;
+    removeLoop?: boolean;
 }
 
 function parse(input: ArrayBuffer, options: Options): IParsed {
-    const absLen = options.absLen;
-    const smwAlias = options.smwAlias;
+    const { absLen, smwAlias, removeLoop } = options;
     const spc = new Uint8Array(input);
 
     const spcFile: SPCFile = new SPCFile(spc);
@@ -113,7 +113,13 @@ function parse(input: ArrayBuffer, options: Options): IParsed {
     otherPointers.push(...rest);
     const {
         lastInstrument, mml, vTable, midi,
-    } = render(sequences, paraList, otherPointers, absLen);
+    } = render({
+        sequences,
+        paraList,
+        otherPointers,
+        absLen,
+        removeLoop,
+    });
     const { header, samples } = handleSample(
         spcFile,
         songEntry + paraLen,
