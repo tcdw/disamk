@@ -1,5 +1,6 @@
 /* eslint-disable no-bitwise */
 
+import jsmidgen, { MidiChannel } from 'jsmidgen';
 import printBuffer from './printBuffer';
 import printByte from './printByte';
 import { readInt8, readUInt16LE } from './utils';
@@ -42,6 +43,7 @@ function render(
         return `=${tick}`;
     }
 
+    // MML State
     let label = 1;
     let vTable = 1;
     let lastInstrument = 0;
@@ -50,6 +52,7 @@ function render(
     otherPointers.forEach((e) => {
         callID[e] = null;
     });
+
     function renderMML(sequence: number[][], handleSubroutine = false, channel: number = -1) {
         const content: string[][] = [];
         let current: string[] = [];
@@ -263,12 +266,24 @@ function render(
         });
         return finalPrint.join('\n');
     }
+
     let mml = '';
+    const midi = new jsmidgen.File();
     for (let i = 0; i < 8; i++) {
         if (paraList[0][i] !== 0) {
             mml += `#${i}\n`;
             mml += renderMML(sequences[paraList[0][i]], true, i);
             mml += '\n\n';
+
+            /* const track = new jsmidgen.Track();
+            renderMIDI({
+                sequence: sequences[paraList[0][i]],
+                handleSubroutine: true,
+                channel: i,
+                midiChannel: i as MidiChannel,
+                track,
+            });
+            midi.addTrack(track); */
         }
     }
     mml = `${rmc.join('\n')}\n\n${mml}`;
@@ -276,6 +291,7 @@ function render(
         lastInstrument,
         mml,
         vTable,
+        midi,
     };
 }
 

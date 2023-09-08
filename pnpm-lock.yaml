@@ -8,6 +8,9 @@ dependencies:
   '@sukka/markdown.css':
     specifier: ^0.1.5
     version: 0.1.5
+  jsmidgen:
+    specifier: ^0.1.5
+    version: 0.1.5
   jszip:
     specifier: ^3.10.1
     version: 3.10.1
@@ -22,6 +25,9 @@ dependencies:
     version: 8.0.1
 
 devDependencies:
+  '@types/jsmidgen':
+    specifier: ^0.1.0
+    version: 0.1.0
   '@types/node':
     specifier: ^18.17.14
     version: 18.17.14
@@ -361,6 +367,10 @@ packages:
   /@sukka/markdown.css@0.1.5:
     resolution: {integrity: sha512-sRQ15167Q1/XztnHnwC7epK3XSenZqplmbykwpt3FqB++j48ov/2XmSBDIacug0ZIFwh50PhETy5R9zxCZza6Q==}
     dev: false
+
+  /@types/jsmidgen@0.1.0:
+    resolution: {integrity: sha512-e8hL2yk7IgV2vWZPLkqq0yqzPZtCeEMQMBw/vYp2z2FHarZJrV4ac+HaNoLF2RQs5ByCSLsRTm1JIuCWTIlzfg==}
+    dev: true
 
   /@types/json-schema@7.0.12:
     resolution: {integrity: sha512-Hr5Jfhc9eYOQNPYO5WLDq/n4jqijdHNlDXjuAQkkt+mWdQR+XJToOHrsD4cPaMXpn6KO7y2+wM8AZEs8VpBLVA==}
@@ -1647,6 +1657,10 @@ packages:
     dependencies:
       argparse: 2.0.1
     dev: true
+
+  /jsmidgen@0.1.5:
+    resolution: {integrity: sha512-AcfpCk5gtBkCeWed8eYbzMa/B/AYLXgJfLb+j7C46wEUrwRvTQw/GvdT9daJFoFRCJCuf598wnPeyB2TstpBxA==}
+    dev: false
 
   /json-buffer@3.0.1:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}

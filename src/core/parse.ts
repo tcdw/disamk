@@ -1,3 +1,4 @@
+import jsmidgen from 'jsmidgen';
 import parseSeq from './parseSeq';
 import render from './renderMML';
 import handleSample, { ISample } from './sample';
@@ -7,6 +8,7 @@ import { readUInt16LE } from './utils';
 export interface IParsed {
     mmlFile: string;
     samples: ISample[];
+    midiFile: jsmidgen.File;
 }
 
 export interface Options {
@@ -109,7 +111,9 @@ function parse(input: ArrayBuffer, options: Options): IParsed {
         sequences[e] = result.content;
     });
     otherPointers.push(...rest);
-    const { lastInstrument, mml, vTable } = render(sequences, paraList, otherPointers, absLen);
+    const {
+        lastInstrument, mml, vTable, midi,
+    } = render(sequences, paraList, otherPointers, absLen);
     const { header, samples } = handleSample(
         spcFile,
         songEntry + paraLen,
@@ -122,7 +126,7 @@ function parse(input: ArrayBuffer, options: Options): IParsed {
     }
     mmlFile += header;
     mmlFile += mml;
-    return { mmlFile, samples };
+    return { mmlFile, samples, midiFile: midi };
 }
 
 export default parse;
