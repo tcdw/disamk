@@ -517,6 +517,14 @@ function render(options: {
             }
             mml += '\n\n';
             const track = new jsmidgen.Track();
+            if (i === 0) {
+                // add GM header
+                track.addEvent({
+                    toBytes(): number[] {
+                        return [0x00, 0xF0, 0x05, 0x7E, 0x7F, 0x09, 0x01, 0xF7];
+                    },
+                } as any);
+            }
             renderMIDI({
                 sequence: flattenSequenceData({
                     sequence: sequences[paraList[0][i]],
