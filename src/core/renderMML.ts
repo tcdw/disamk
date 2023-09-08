@@ -1,6 +1,6 @@
 /* eslint-disable no-bitwise */
 
-import jsmidgen, { MidiChannel } from 'jsmidgen';
+import jsmidgen, { MidiChannel, MidiParameterValue } from 'jsmidgen';
 import printBuffer from './printBuffer';
 import printByte from './printByte';
 import { printParsedBuffer, readInt8, readUInt16LE } from './utils';
@@ -368,12 +368,19 @@ function render(options: {
 
     function renderMIDI(subOptions: {
         sequence: number[][]
-        channel: number
+        channel: MidiChannel
         track: jsmidgen.Track
     }) {
+        const tickScale = 10;
         const { sequence, channel, track } = subOptions;
-        // const channel = subOptions.channel ?? -1;
-        // let offset = paraList[0][channel] || 0;
+        // 上一次使用的音符
+        let lastNote = -1;
+        // 当前音符长度
+        let currentNoteLength = 0;
+        // 待添加到下一次事件的长度
+        let holdLength = 0;
+        // 当前是否有音符在播放
+        let isNoteOn = false;
 
         sequence.forEach((e, i) => {
             const h = e[0];
@@ -381,105 +388,62 @@ function render(options: {
 
             switch (true) {
             case h >= 0x1 && h <= 0x7f: {
-                /* noteLength = h;
-                if (e.length > 1) {
-                    if (prevQ !== e[1]) {
-                        prevQ = e[1];
-                        add(`q${printByte(e[1])}`);
-                    }
-                } */
-                // todo note length
+                // note param
+                currentNoteLength = e[0] * tickScale;
                 break;
             }
             case h >= 0x80 && h <= 0xc5: {
-                /* const note = h - 0x80;
-                const octave = Math.floor((h - 0x80) / 12) + 1;
-                if (prevOctave < 1) {
-                    add(`o${octave}`);
-                } else if (octave > prevOctave) {
-                    add('>'.repeat(octave - prevOctave));
-                } else if (octave < prevOctave) {
-                    add('<'.repeat(prevOctave - octave));
+                if (isNoteOn) {
+                    track.addNoteOff(channel, lastNote, holdLength);
+                    isNoteOn = false;
+                    holdLength = 0;
                 }
-                prevOctave = octave;
-                add(`${notes[note % 12]}${getNoteLenForMML(noteLength)}`);
-                currentTotalTick += noteLength;
-                if (next[0] >= 0xda || currentTotalTick >= 192) {
-                    lineBreak();
-                }
-                if (currentTotalTick >= 192) {
-                    currentTotalTick = 0;
-                } */
-                // todo regular note
+                const note = h - 0x80;
+                lastNote = note + 12;
+                track.addNoteOn(channel, lastNote, holdLength);
+                isNoteOn = true;
+                holdLength = currentNoteLength;
                 break;
             }
             case h === 0xc6: {
-                /* add(`^${getNoteLenForMML(noteLength)}`);
-                currentTotalTick += noteLength;
-                if (next[0] >= 0xda || currentTotalTick >= 192) {
-                    lineBreak();
-                }
-                if (currentTotalTick >= 192) {
-                    currentTotalTick = 0;
-                } */
-                // todo tie
+                // tie
+                holdLength += currentNoteLength;
                 break;
             }
             case h === 0xc7: {
-                /* add(`r${getNoteLenForMML(noteLength)}`);
-                currentTotalTick += noteLength;
-                if (next[0] >= 0xda || currentTotalTick >= 192) {
-                    lineBreak();
+                // rest
+                if (isNoteOn) {
+                    track.addNoteOff(channel, lastNote, holdLength);
+                    isNoteOn = false;
+                    lastNote = -1;
+                    holdLength = currentNoteLength;
+                } else {
+                    holdLength += currentNoteLength;
                 }
-                if (currentTotalTick >= 192) {
-                    currentTotalTick = 0;
-                } */
-                // todo rest
                 break;
             }
             case h >= 0xd0 && h <= 0xd9: {
-                /* add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength)}`);
-                currentTotalTick += noteLength;
-                if (next[0] >= 0xda || currentTotalTick >= 192) {
-                    lineBreak();
-                }
-                if (currentTotalTick >= 192) {
-                    currentTotalTick = 0;
-                } */
                 // todo percussion note
                 break;
             }
             case h === 0xda: {
-                /* lineBreak();
-                add(`@${e[1]}`);
-                if (e[1] < 30) {
-                    add(' h0');
-                }
-                if (lastInstrument < e[1]) {
-                    lastInstrument = e[1];
-                } */
                 // todo instrument
+                track.setInstrument(channel, e[1] as MidiParameterValue, holdLength);
+                holdLength = 0;
                 break;
             }
             case h === 0xdb: {
-                /* if (e[1] <= 20) {
-                    add(`y${e[1]}`);
-                } else {
-                    const echoL = (e[1] >> 7) % 2;
-                    const echoR = (e[1] >> 6) % 2;
-                    add(`y${e[1] % 0x40},${echoL},${echoR}`);
-                } */
                 // todo pan
                 break;
             }
             case h === 0xe0: {
-                // add(`w${e[1]}`);
                 // todo global volume
                 break;
             }
             case h === 0xe2: {
-                // add(`t${e[1]}`);
                 // todo tempo
+                track.tempo(e[1] / 0.4096, holdLength);
+                holdLength = 0;
                 break;
             }
             case h === 0xe7: {
@@ -494,32 +458,13 @@ function render(options: {
                 break;
             }
             }
-            // offset += e.length;
+        });
 
-            /* if (!options.removeLoop) {
-                if (channel >= 0
-                    && paraList.length > 1
-                    && paraList[1][channel] !== paraList[0][channel]
-                    && !loopPut
-                    && offset >= paraList[1][channel]) {
-                    if (offset !== paraList[1][channel]) {
-                        throw new Error('Loop point malposition');
-                    }
-                    lineBreak();
-                    add('/');
-                    lineBreak();
-                    loopPut = true;
-                }
-            } */
-        });
-        /* if (current.length > 0) {
-            content.push(current);
+        // cleanup
+        if (isNoteOn) {
+            track.addNoteOff(channel, lastNote, holdLength);
+            isNoteOn = false;
         }
-        const finalPrint: string[] = [];
-        content.forEach((e) => {
-            finalPrint.push(e.join(' '));
-        });
-        return finalPrint.join('\n'); */
     }
 
     let mml = '';
@@ -544,15 +489,16 @@ function render(options: {
                 });
             }
             mml += '\n\n';
-            /* const track = new jsmidgen.Track();
+            const track = new jsmidgen.Track();
             renderMIDI({
-                sequence: sequences[paraList[0][i]],
-                handleSubroutine: true,
-                channel: i,
-                midiChannel: i as MidiChannel,
+                sequence: flattenSequenceData({
+                    sequence: sequences[paraList[0][i]],
+                    handleSubroutine: true,
+                }),
+                channel: i as MidiChannel,
                 track,
             });
-            midi.addTrack(track); */
+            midi.addTrack(track);
         }
     }
     mml = `${rmc.join('\n')}\n\n${mml}`;
