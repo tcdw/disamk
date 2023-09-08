@@ -3,7 +3,7 @@
 import jsmidgen, { MidiChannel } from 'jsmidgen';
 import printBuffer from './printBuffer';
 import printByte from './printByte';
-import { readInt8, readUInt16LE } from './utils';
+import { printParsedBuffer, readInt8, readUInt16LE } from './utils';
 
 const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
 
@@ -267,6 +267,84 @@ function render(
         return finalPrint.join('\n');
     }
 
+    function flattenSequenceData(sequence: number[][], handleSubroutine = false, channel: number = -1) {
+        const rebuiltData: number[][] = [];
+        let loopLeft = -1;
+        let repeatPointStart = 0;
+        let repeatPrepare = false;
+        for (let i = 0; i < sequence.length; i++) {
+            const e = sequence[i];
+            const h = e[0];
+            switch (true) {
+            case h === 0xe6 && e[1] === 0x00: {
+                // console.log('loop start');
+                repeatPointStart = i;
+                repeatPrepare = true;
+                break;
+            }
+            case h === 0xe6: {
+                // console.log(`loop end, ${loopLeft}`);
+                // 准备状态时，设置剩余循环次数
+                if (repeatPrepare) {
+                    loopLeft = e[1];
+                    repeatPrepare = false;
+                }
+                // console.log(loopLeft);
+                // 有剩余循环次数，递减剩余次数，跳转指针
+                if (loopLeft > 0) {
+                    loopLeft -= 1;
+                    i = repeatPointStart;
+                }
+                break;
+            }
+            case h === 0xe9: {
+                if (handleSubroutine) {
+                    const addr = readUInt16LE(e, 1);
+                    const data = flattenSequenceData(sequences[addr]);
+                    for (let j = 0; j < e[3]; j++) {
+                        rebuiltData.push(...data);
+                    }
+                }
+                break;
+            }
+            default: {
+                rebuiltData.push(e);
+                break;
+            }
+            }
+        }
+        let totalTicks = 0;
+        let noteTicks = 0;
+        rebuiltData.forEach((e) => {
+            const h = e[0];
+            switch (true) {
+            case h >= 0x1 && h <= 0x7f: {
+                noteTicks = h;
+                break;
+            }
+            case h >= 0x80 && h <= 0xc5: {
+                totalTicks += noteTicks;
+                break;
+            }
+            case h === 0xc6: {
+                totalTicks += noteTicks;
+                break;
+            }
+            case h === 0xc7: {
+                totalTicks += noteTicks;
+                break;
+            }
+            default: {
+                break;
+            }
+            }
+        });
+        if (handleSubroutine) {
+            console.log(totalTicks);
+        }
+        return rebuiltData;
+    }
+
     let mml = '';
     const midi = new jsmidgen.File();
     for (let i = 0; i < 8; i++) {
@@ -274,6 +352,8 @@ function render(
             mml += `#${i}\n`;
             mml += renderMML(sequences[paraList[0][i]], true, i);
             mml += '\n\n';
+
+            flattenSequenceData(sequences[paraList[0][i]], true, i);
 
             /* const track = new jsmidgen.Track();
             renderMIDI({
