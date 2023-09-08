@@ -423,11 +423,20 @@ function render(options: {
                 break;
             }
             case h >= 0xd0 && h <= 0xd9: {
-                // todo percussion note
+                if (isNoteOn) {
+                    track.addNoteOff(channel, lastNote, holdLength);
+                    isNoteOn = false;
+                    holdLength = 0;
+                }
+                track.setInstrument(channel, (h - 0xd0 + 21) as MidiParameterValue, holdLength);
+                lastNote = 60;
+                track.addNoteOn(channel, lastNote, 0);
+                isNoteOn = true;
+                holdLength = currentNoteLength;
                 break;
             }
             case h === 0xda: {
-                // todo instrument
+                // instrument
                 track.setInstrument(channel, e[1] as MidiParameterValue, holdLength);
                 holdLength = 0;
                 break;
