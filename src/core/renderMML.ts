@@ -366,6 +366,162 @@ function render(options: {
         return rebuiltData;
     }
 
+    function renderMIDI(subOptions: {
+        sequence: number[][]
+        channel: number
+        track: jsmidgen.Track
+    }) {
+        const { sequence, channel, track } = subOptions;
+        // const channel = subOptions.channel ?? -1;
+        // let offset = paraList[0][channel] || 0;
+
+        sequence.forEach((e, i) => {
+            const h = e[0];
+            const next = sequence[i + 1] || {};
+
+            switch (true) {
+            case h >= 0x1 && h <= 0x7f: {
+                /* noteLength = h;
+                if (e.length > 1) {
+                    if (prevQ !== e[1]) {
+                        prevQ = e[1];
+                        add(`q${printByte(e[1])}`);
+                    }
+                } */
+                // todo note length
+                break;
+            }
+            case h >= 0x80 && h <= 0xc5: {
+                /* const note = h - 0x80;
+                const octave = Math.floor((h - 0x80) / 12) + 1;
+                if (prevOctave < 1) {
+                    add(`o${octave}`);
+                } else if (octave > prevOctave) {
+                    add('>'.repeat(octave - prevOctave));
+                } else if (octave < prevOctave) {
+                    add('<'.repeat(prevOctave - octave));
+                }
+                prevOctave = octave;
+                add(`${notes[note % 12]}${getNoteLenForMML(noteLength)}`);
+                currentTotalTick += noteLength;
+                if (next[0] >= 0xda || currentTotalTick >= 192) {
+                    lineBreak();
+                }
+                if (currentTotalTick >= 192) {
+                    currentTotalTick = 0;
+                } */
+                // todo regular note
+                break;
+            }
+            case h === 0xc6: {
+                /* add(`^${getNoteLenForMML(noteLength)}`);
+                currentTotalTick += noteLength;
+                if (next[0] >= 0xda || currentTotalTick >= 192) {
+                    lineBreak();
+                }
+                if (currentTotalTick >= 192) {
+                    currentTotalTick = 0;
+                } */
+                // todo tie
+                break;
+            }
+            case h === 0xc7: {
+                /* add(`r${getNoteLenForMML(noteLength)}`);
+                currentTotalTick += noteLength;
+                if (next[0] >= 0xda || currentTotalTick >= 192) {
+                    lineBreak();
+                }
+                if (currentTotalTick >= 192) {
+                    currentTotalTick = 0;
+                } */
+                // todo rest
+                break;
+            }
+            case h >= 0xd0 && h <= 0xd9: {
+                /* add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength)}`);
+                currentTotalTick += noteLength;
+                if (next[0] >= 0xda || currentTotalTick >= 192) {
+                    lineBreak();
+                }
+                if (currentTotalTick >= 192) {
+                    currentTotalTick = 0;
+                } */
+                // todo percussion note
+                break;
+            }
+            case h === 0xda: {
+                /* lineBreak();
+                add(`@${e[1]}`);
+                if (e[1] < 30) {
+                    add(' h0');
+                }
+                if (lastInstrument < e[1]) {
+                    lastInstrument = e[1];
+                } */
+                // todo instrument
+                break;
+            }
+            case h === 0xdb: {
+                /* if (e[1] <= 20) {
+                    add(`y${e[1]}`);
+                } else {
+                    const echoL = (e[1] >> 7) % 2;
+                    const echoR = (e[1] >> 6) % 2;
+                    add(`y${e[1] % 0x40},${echoL},${echoR}`);
+                } */
+                // todo pan
+                break;
+            }
+            case h === 0xe0: {
+                // add(`w${e[1]}`);
+                // todo global volume
+                break;
+            }
+            case h === 0xe2: {
+                // add(`t${e[1]}`);
+                // todo tempo
+                break;
+            }
+            case h === 0xe7: {
+                // todo volume
+                break;
+            }
+            case h === 0xfa && e[1] === 0x06: {
+                vTable = e[2];
+                break;
+            }
+            default: {
+                break;
+            }
+            }
+            // offset += e.length;
+
+            /* if (!options.removeLoop) {
+                if (channel >= 0
+                    && paraList.length > 1
+                    && paraList[1][channel] !== paraList[0][channel]
+                    && !loopPut
+                    && offset >= paraList[1][channel]) {
+                    if (offset !== paraList[1][channel]) {
+                        throw new Error('Loop point malposition');
+                    }
+                    lineBreak();
+                    add('/');
+                    lineBreak();
+                    loopPut = true;
+                }
+            } */
+        });
+        /* if (current.length > 0) {
+            content.push(current);
+        }
+        const finalPrint: string[] = [];
+        content.forEach((e) => {
+            finalPrint.push(e.join(' '));
+        });
+        return finalPrint.join('\n'); */
+    }
+
     let mml = '';
     const midi = new jsmidgen.File();
     for (let i = 0; i < 8; i++) {
