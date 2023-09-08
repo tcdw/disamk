@@ -7,6 +7,8 @@ import { printParsedBuffer, readInt8, readUInt16LE } from './utils';
 
 const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
 
+const transportSMWInstrument = [0, 0, 5, 0, 0, 0, 0, 0, 0, -5, 6, 0, -5, 0, 0, 8, 0, 0, 0];
+
 function render(options: {
     sequences: Record<number, number[][]>
     paraList: number[][]
@@ -381,6 +383,8 @@ function render(options: {
         let holdLength = 0;
         // 当前是否有音符在播放
         let isNoteOn = false;
+        // 当前音色
+        let currentInstrument = 0;
 
         sequence.forEach((e, i) => {
             const h = e[0];
@@ -399,7 +403,7 @@ function render(options: {
                     holdLength = 0;
                 }
                 const note = h - 0x80;
-                lastNote = note + 12;
+                lastNote = note + 12 + (transportSMWInstrument[currentInstrument] ?? 0);
                 track.addNoteOn(channel, lastNote, holdLength);
                 isNoteOn = true;
                 holdLength = currentNoteLength;
@@ -429,6 +433,7 @@ function render(options: {
                     holdLength = 0;
                 }
                 track.setInstrument(channel, (h - 0xd0 + 21) as MidiParameterValue, holdLength);
+                currentInstrument = h - 0xd0 + 21;
                 lastNote = 60;
                 track.addNoteOn(channel, lastNote, 0);
                 isNoteOn = true;
@@ -438,6 +443,7 @@ function render(options: {
             case h === 0xda: {
                 // instrument
                 track.setInstrument(channel, e[1] as MidiParameterValue, holdLength);
+                currentInstrument = e[1];
                 holdLength = 0;
                 break;
             }
