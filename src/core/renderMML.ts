@@ -9,6 +9,41 @@ const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', '
 
 const transportSMWInstrument = [0, 0, 5, 0, 0, 0, 0, 0, 0, -5, 6, 0, -5, 0, 0, 8, 0, 0, 0];
 
+// 改写自 https://github.com/loveemu/spc_converters_legacy/blob/master/nintspc/src/nintspc.c
+function getNoteLenForMML(tick: number, options: {
+    division?: number
+    absLen?: boolean
+} = {}) {
+    const { absLen } = options;
+    const division = options.division ?? 48;
+    if (absLen) {
+        return `=${tick}`;
+    }
+    const dotMax = 6;
+    const note = division * 4;
+    let l;
+    let dot;
+    let text = '';
+    for (l = 1; l <= note; l += 1) {
+        let cTick = 0;
+        for (dot = 0; dot <= dotMax; dot += 1) {
+            const ld = (l << dot);
+            if (note % ld) {
+                break;
+            }
+            cTick += note / ld;
+            if (tick === cTick) {
+                text += l;
+                for (; dot > 0; dot -= 1) {
+                    text += '.';
+                }
+                return text;
+            }
+        }
+    }
+    return `=${tick}`;
+}
+
 function render(options: {
     sequences: Record<number, number[][]>
     paraList: number[][]
@@ -20,35 +55,6 @@ function render(options: {
     const {
         sequences, paraList, otherPointers, absLen,
     } = options;
-    // 改写自 https://github.com/loveemu/spc_converters_legacy/blob/master/nintspc/src/nintspc.c
-    function getNoteLenForMML(tick: number, division = 48) {
-        if (absLen) {
-            return `=${tick}`;
-        }
-        const dotMax = 6;
-        const note = division * 4;
-        let l;
-        let dot;
-        let text = '';
-        for (l = 1; l <= note; l += 1) {
-            let cTick = 0;
-            for (dot = 0; dot <= dotMax; dot += 1) {
-                const ld = (l << dot);
-                if (note % ld) {
-                    break;
-                }
-                cTick += note / ld;
-                if (tick === cTick) {
-                    text += l;
-                    for (; dot > 0; dot -= 1) {
-                        text += '.';
-                    }
-                    return text;
-                }
-            }
-        }
-        return `=${tick}`;
-    }
 
     // MML State
     let label = 1;
@@ -113,7 +119,7 @@ function render(options: {
                     add('<'.repeat(prevOctave - octave));
                 }
                 prevOctave = octave;
-                add(`${notes[note % 12]}${getNoteLenForMML(noteLength)}`);
+                add(`${notes[note % 12]}${getNoteLenForMML(noteLength, { absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
@@ -124,7 +130,7 @@ function render(options: {
                 break;
             }
             case h === 0xc6: {
-                add(`^${getNoteLenForMML(noteLength)}`);
+                add(`^${getNoteLenForMML(noteLength, { absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
@@ -135,7 +141,7 @@ function render(options: {
                 break;
             }
             case h === 0xc7: {
-                add(`r${getNoteLenForMML(noteLength)}`);
+                add(`r${getNoteLenForMML(noteLength, { absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
@@ -146,7 +152,7 @@ function render(options: {
                 break;
             }
             case h >= 0xd0 && h <= 0xd9: {
-                add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength)}`);
+                add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength, { absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
