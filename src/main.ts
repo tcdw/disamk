@@ -12,14 +12,29 @@ const smwAlias = document.getElementById('smw-alias') as HTMLInputElement;
 const file = document.getElementById('file-receiver') as HTMLInputElement;
 const uploadBtn = document.getElementById('upload-btn') as HTMLLabelElement;
 
+function bytesToArrayBuffer(data: (string | number)[]) {
+    const built: number[] = [];
+    for (let i = 0; i < data.length; i++) {
+        const e = data[i];
+        if (typeof e === 'string') {
+            built.push(e.charCodeAt(0));
+        } else {
+            built.push(e);
+        }
+    }
+    return new Uint8Array(built);
+}
+
 function handleUpload(name: string, spc: ArrayBuffer) {
-    const { mmlFile, samples } = parse(spc, {
+    const { mmlFile, samples, midiFile } = parse(spc, {
         absLen: absLen.checked,
         smwAlias: smwAlias.checked,
+        removeLoop: false,
     });
-    const zip = new JSZip();
+    /* const zip = new JSZip();
     const sampleDir = `${name}_samples`;
     zip.file(`${name}.txt`, `#amk 2\n#path "${sampleDir}"\n${mmlFile}`);
+    zip.file(`${name}.mid`, bytesToArrayBuffer(midiFile.toBytes()));
 
     const sample = zip.folder(sampleDir);
     samples.forEach((e) => {
@@ -38,7 +53,21 @@ function handleUpload(name: string, spc: ArrayBuffer) {
         document.body.appendChild(eleLink);
         eleLink.click();
         document.body.removeChild(eleLink);
-    });
+    }); */
+
+    // change to 480 ticks per beat
+    const binary = bytesToArrayBuffer(midiFile.toBytes());
+    binary[0xC] = 0x01;
+    binary[0xD] = 0xE0;
+
+    const filename = `${name}_disamk.mid`;
+    const eleLink = document.createElement('a');
+    eleLink.download = filename;
+    eleLink.style.display = 'none';
+    eleLink.href = URL.createObjectURL(new Blob([binary]));
+    document.body.appendChild(eleLink);
+    eleLink.click();
+    document.body.removeChild(eleLink);
 }
 
 file.addEventListener('change', () => {

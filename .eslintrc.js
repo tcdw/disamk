@@ -31,6 +31,7 @@ module.exports = {
         'no-continue': 'off',
         'no-constant-condition': 'off',
         'no-param-reassign': 'off',
+        'max-len': 'off',
     },
     settings: {
         'import/resolver': {

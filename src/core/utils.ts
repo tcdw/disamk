@@ -38,3 +38,11 @@ export function printBuffer(content: number[] | Uint8Array): string {
     });
     return prettyList.join(' ');
 }
+
+export function printParsedBuffer(content: number[][]) {
+    let line = '';
+    content.forEach((e) => {
+        line += `${printBuffer(e)}\n`;
+    });
+    return line;
+}
