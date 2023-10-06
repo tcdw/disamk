@@ -37,8 +37,12 @@
         <section class="info">
             <div class="markdown-body">
                 <p>You can convert your AddmusicK 1.0.X SPC back into MML and BRR samples.</p>
+                <p>Since Oct 6, 2023, MIDI file is also exported. <strong>Be aware this feature is still experimental,</strong> and most hex-command effects are not implemented yet.</p>
                 <p>Select your SPC file and press Start, then the disassembled result will be downloaded automatically from your browser.</p>
-                <p><b>Only AddmusicK 1.0.X SPC is supported.</b> For AddMusic 4.05/M/etc SPC, use <a href="https://drive.google.com/drive/folders/0B6s5ZRAO2QlAS1RuSzRubm13OWM" target="_blank">NintSPC</a>.</p>
+                <p><b>Only AddmusicK 1.0.0 ~ 1.0.9 SPC is guaranteed to be supported.</b>
+                    For AddMusic 4.05/M/etc SPC, use <a href="https://drive.google.com/drive/folders/0B6s5ZRAO2QlAS1RuSzRubm13OWM" target="_blank">NintSPC</a>;
+                    you can also use <a href="https://dl.dropboxusercontent.com/s/t6yzrre03w3tz6f/nintspc.exe" target="_blank">my own build of NintSPC</a> for accurate qXY command conversions
+                    <a href="https://github.com/tcdw/NintSPC-mod" target="_blank">(source)</a>.</p>
                 <h2>Important Notice</h2>
                 <p>This tool is purely frontend-based, which won't upload any data into our server. You
                     can get source code <a href="https://gitlab.com/tcdw/disamk" target="_blank">here</a>.</p>
@@ -51,7 +55,7 @@
         </section>
     </div>
     <footer>
-        &copy; 2019-2023 Nanako (tcdw)
+        Version 1.2.0 ・ &copy; 2019-2023 Nanako (tcdw)
     </footer>
     <script type="module" src="/src/main.ts"></script>
 </body>
