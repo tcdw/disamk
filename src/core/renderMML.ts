@@ -70,14 +70,16 @@ function render(options: {
         sequence: number[][]
         handleSubroutine?: boolean
         channel?: number
+        noteLength?: number
+        prevQ?: number
     }) {
         const { sequence, handleSubroutine } = subOptions;
         const channel = subOptions.channel ?? -1;
         const content: string[][] = [];
         let current: string[] = [];
         let prevOctave = 0;
-        let noteLength = 0;
-        let prevQ = 0;
+        let noteLength = subOptions.noteLength || 0;
+        let prevQ = subOptions.prevQ || 0;
         let currentTotalTick = 0;
         let offset = paraList[0][channel] || 0;
         let loopPut = false;
@@ -220,6 +222,8 @@ function render(options: {
                         label += 1;
                         loopCall = `[\n${renderMML({
                             sequence: sequences[addr],
+                            noteLength,
+                            prevQ
                         })}\n]`;
                     }
                     loopCall = `(${callID[addr]})${loopCall}${e[3]}`;
