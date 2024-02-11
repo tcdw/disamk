@@ -1,6 +1,5 @@
 import JSZip from 'jszip';
 import parse from './core/parse';
-import 'normalize.css/normalize.css';
 import './styles/index.scss';
 import 'preline';
 
