@@ -1,9 +1,8 @@
 import JSZip from 'jszip';
-import mdui from 'mdui';
 import parse from './core/parse';
 import 'normalize.css/normalize.css';
-import '@sukka/markdown.css/dist/markdown.css';
-import './scss/index.scss';
+import './styles/index.scss';
+import 'preline';
 
 const form = document.getElementById('main-form') as HTMLFormElement;
 const error = document.getElementById('error') as HTMLDivElement;
@@ -96,5 +95,3 @@ form.addEventListener('submit', (f) => {
     };
     fileReader.readAsArrayBuffer(fileInfo);
 });
-
-mdui.mutation();
