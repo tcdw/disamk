@@ -45,5 +45,5 @@ export default {
         require('@tailwindcss/forms'),
         require('@tailwindcss/typography'),
     ],
-    darkMode: 'class',
+    // darkMode: 'class',
 };
