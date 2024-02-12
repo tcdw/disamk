@@ -8,13 +8,13 @@ import handleSample, { ISample } from './sample';
 import SPCFile from './SPCFile';
 import { readUInt16LE } from './utils';
 
-export interface IParsed {
+export interface Parsed {
     mmlFile: string;
     samples: ISample[];
     midiFile: jsmidgen.File;
 }
 
-export interface Options {
+export interface ParseOptions {
     absLen: boolean;
     smwAlias: boolean;
     removeLoop?: boolean;
@@ -22,7 +22,7 @@ export interface Options {
 
 // F0 02 08 10 FD F6 __ __ D5 11 02 09 48 5C
 
-function parse(input: ArrayBuffer, options: Options): IParsed {
+function parse(input: ArrayBuffer, options: ParseOptions): Parsed {
     const { absLen, smwAlias, removeLoop } = options;
     const spc = new Uint8Array(input);
 

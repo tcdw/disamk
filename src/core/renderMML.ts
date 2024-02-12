@@ -223,7 +223,7 @@ function render(options: {
                         loopCall = `[\n${renderMML({
                             sequence: sequences[addr],
                             noteLength,
-                            prevQ
+                            prevQ,
                         })}\n]`;
                     }
                     loopCall = `(${callID[addr]})${loopCall}${e[3]}`;
