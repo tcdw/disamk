@@ -8,7 +8,6 @@ const error = document.getElementById('error') as HTMLDivElement;
 const absLen = document.getElementById('abs-len') as HTMLInputElement;
 const smwAlias = document.getElementById('smw-alias') as HTMLInputElement;
 const file = document.getElementById('file-receiver') as HTMLInputElement;
-const uploadBtn = document.getElementById('upload-btn') as HTMLLabelElement;
 
 function bytesToArrayBuffer(data: (string | number)[]) {
     const built: number[] = [];
@@ -64,13 +63,6 @@ function handleUpload(name: string, spc: ArrayBuffer) {
         document.body.removeChild(eleLink);
     });
 }
-
-file.addEventListener('change', () => {
-    if (file.files !== null) {
-        const fileName = file.files[0].name;
-        uploadBtn.textContent = `Selected: ${fileName}`;
-    }
-});
 
 form.addEventListener('submit', (f) => {
     f.preventDefault();
