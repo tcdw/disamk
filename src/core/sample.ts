@@ -1,7 +1,5 @@
-import printBBuffer from './printBuffer';
-import printByte from './printByte';
 import SPCFile from './SPCFile';
-import { readUInt16LE } from './utils';
+import { readUInt16LE, printBuffer, printByte } from './utils';
 
 export interface ISample {
     name: string;
@@ -62,7 +60,7 @@ function handleSample(
             } else {
                 instHeader = `"${samples[temp[0]].name}"`;
             }
-            instList.push(`\t${instHeader} ${printBBuffer(temp.slice(1))}`);
+            instList.push(`\t${instHeader} ${printBuffer(temp.slice(1))}`);
         }
         add('#instruments');
         add('{');

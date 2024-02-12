@@ -1,9 +1,9 @@
 /* eslint-disable no-bitwise */
 
 import jsmidgen, { MidiChannel, MidiParameterValue } from 'jsmidgen';
-import printBuffer from './printBuffer';
-import printByte from './printByte';
-import { printParsedBuffer, readInt8, readUInt16LE } from './utils';
+import {
+    printParsedBuffer, readInt8, readUInt16LE, printBuffer, printByte,
+} from './utils';
 
 const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
 
