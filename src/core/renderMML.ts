@@ -9,6 +9,21 @@ const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', '
 
 const transportSMWInstrument = [0, 0, 5, 0, 0, 0, 0, 0, 0, -5, 6, 0, -5, 0, 0, 8, 0, 0, 0];
 
+const noteDistortMap: number[] = [];
+
+for (let i = 0; i < 72; i++) {
+    noteDistortMap[i] = Math.random() * 2 - 1;
+}
+
+function distortToCommand(note: number) {
+    let minor = noteDistortMap[note] % 1;
+    if (minor < 0) {
+        // -0.4 -> -1 + 0.6
+        minor = 1 + minor;
+    }
+    return `h${Math.floor(noteDistortMap[note])} $ee $${Math.floor(minor * 256).toString(16).padStart(2, '0')}`;
+}
+
 // 改写自 https://github.com/loveemu/spc_converters_legacy/blob/master/nintspc/src/nintspc.c
 function getNoteLenForMML(tick: number, options: {
     division?: number
@@ -122,6 +137,7 @@ function render(options: {
                 }
                 prevOctave = octave;
                 add(`${notes[note % 12]}${getNoteLenForMML(noteLength, { absLen })}`);
+                // add(` ${distortToCommand(note)} ${notes[note % 12]}${getNoteLenForMML(noteLength, { absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
