@@ -5,17 +5,54 @@ import {
     printParsedBuffer, readInt8, readUInt16LE, printBuffer, printByte,
 } from './utils';
 
+// ==================== Constants ====================
 const notes: string[] = ['c', 'c+', 'd', 'd+', 'e', 'f', 'f+', 'g', 'g+', 'a', 'a+', 'b'];
-
 const transportSMWInstrument = [0, 0, 5, 0, 0, 0, 0, 0, 0, -5, 6, 0, -5, 0, 0, 8, 0, 0, 0];
-
 const noteDistortMap: number[] = [];
 
 for (let i = 0; i < 72; i++) {
     noteDistortMap[i] = Math.random() * 2 - 1;
 }
 
-function distortToCommand(note: number) {
+// ==================== Type Definitions ====================
+interface RenderOptions {
+    sequences: Record<number, number[][]>;
+    paraList: number[][];
+    otherPointers: number[];
+    absLen: boolean;
+    removeLoop?: boolean;
+    velocityTable: Uint8Array[];
+}
+
+interface MMLRenderOptions {
+    sequence: number[][];
+    handleSubroutine?: boolean;
+    channel?: number;
+    noteLength?: number;
+    prevQ?: number;
+}
+
+interface MIDIRenderOptions {
+    sequence: number[][];
+    channel: MidiChannel;
+    track: jsmidgen.Track;
+}
+
+interface SequenceFlattenerOptions {
+    sequence: number[][];
+    handleSubroutine?: boolean;
+}
+
+interface MMLState {
+    label: number;
+    vTable: number;
+    lastInstrument: number;
+    callID: { [key: number]: number | null };
+    rmc: string[];
+}
+
+// ==================== Utility Functions ====================
+function distortToCommand(note: number): string {
     let minor = noteDistortMap[note] % 1;
     if (minor < 0) {
         // -0.4 -> -1 + 0.6
@@ -26,9 +63,9 @@ function distortToCommand(note: number) {
 
 // 改写自 https://github.com/loveemu/spc_converters_legacy/blob/master/nintspc/src/nintspc.c
 function getNoteLenForMML(tick: number, options: {
-    division?: number
-    absLen?: boolean
-} = {}) {
+    division?: number;
+    absLen?: boolean;
+} = {}): string {
     const { absLen } = options;
     const division = options.division ?? 48;
     if (absLen) {
@@ -59,35 +96,34 @@ function getNoteLenForMML(tick: number, options: {
     return `=${tick}`;
 }
 
-function render(options: {
-    sequences: Record<number, number[][]>
-    paraList: number[][]
-    otherPointers: number[]
-    absLen: boolean
-    removeLoop?: boolean
-    velocityTable: Uint8Array[]
-}) {
-    const {
-        sequences, paraList, otherPointers, absLen,
-    } = options;
+// ==================== MML Renderer Class ====================
+class MMLRenderer {
+    public state: MMLState;
+    private options: RenderOptions;
+    private sequences: Record<number, number[][]>;
+    private paraList: number[][];
+    private absLen: boolean;
 
-    // MML State
-    let label = 1;
-    let vTable = 1;
-    let lastInstrument = 0;
-    const callID: { [key: number]: number | null; } = {};
-    const rmc: string[] = [];
-    otherPointers.forEach((e) => {
-        callID[e] = null;
-    });
+    constructor(options: RenderOptions) {
+        this.options = options;
+        this.sequences = options.sequences;
+        this.paraList = options.paraList;
+        this.absLen = options.absLen;
+        
+        this.state = {
+            label: 1,
+            vTable: 1,
+            lastInstrument: 0,
+            callID: {},
+            rmc: [],
+        };
+        
+        options.otherPointers.forEach((e) => {
+            this.state.callID[e] = null;
+        });
+    }
 
-    function renderMML(subOptions: {
-        sequence: number[][]
-        handleSubroutine?: boolean
-        channel?: number
-        noteLength?: number
-        prevQ?: number
-    }) {
+    renderMML(subOptions: MMLRenderOptions): string {
         const { sequence, handleSubroutine } = subOptions;
         const channel = subOptions.channel ?? -1;
         const content: string[][] = [];
@@ -96,19 +132,19 @@ function render(options: {
         let noteLength = subOptions.noteLength || 0;
         let prevQ = subOptions.prevQ || 0;
         let currentTotalTick = 0;
-        let offset = paraList[0][channel] || 0;
+        let offset = this.paraList[0][channel] || 0;
         let loopPut = false;
 
-        function add(e: string) {
+        const add = (e: string) => {
             current.push(e);
-        }
+        };
 
-        function lineBreak() {
+        const lineBreak = () => {
             if (current.length > 0) {
                 content.push(current);
                 current = [];
             }
-        }
+        };
 
         sequence.forEach((e, i) => {
             const h = e[0];
@@ -136,7 +172,7 @@ function render(options: {
                     add('<'.repeat(prevOctave - octave));
                 }
                 prevOctave = octave;
-                add(`${notes[note % 12]}${getNoteLenForMML(noteLength, { absLen })}`);
+                add(`${notes[note % 12]}${getNoteLenForMML(noteLength, { absLen: this.absLen })}`);
                 // add(` ${distortToCommand(note)} ${notes[note % 12]}${getNoteLenForMML(noteLength, { absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
@@ -148,7 +184,7 @@ function render(options: {
                 break;
             }
             case h === 0xc6: {
-                add(`^${getNoteLenForMML(noteLength, { absLen })}`);
+                add(`^${getNoteLenForMML(noteLength, { absLen: this.absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
@@ -159,7 +195,7 @@ function render(options: {
                 break;
             }
             case h === 0xc7: {
-                add(`r${getNoteLenForMML(noteLength, { absLen })}`);
+                add(`r${getNoteLenForMML(noteLength, { absLen: this.absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
@@ -170,7 +206,7 @@ function render(options: {
                 break;
             }
             case h >= 0xd0 && h <= 0xd9: {
-                add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength, { absLen })}`);
+                add(`@${h - 0xd0 + 21} c${getNoteLenForMML(noteLength, { absLen: this.absLen })}`);
                 currentTotalTick += noteLength;
                 if (next[0] >= 0xda || currentTotalTick >= 192) {
                     lineBreak();
@@ -186,8 +222,8 @@ function render(options: {
                 if (e[1] < 30) {
                     add(' h0');
                 }
-                if (lastInstrument < e[1]) {
-                    lastInstrument = e[1];
+                if (this.state.lastInstrument < e[1]) {
+                    this.state.lastInstrument = e[1];
                 }
                 break;
             }
@@ -228,21 +264,20 @@ function render(options: {
             case h === 0xe9: {
                 // lineBreak();
                 // add(`; ${printBBuffer(e)}    ; subroutine called`);
-                // lineBreak();
                 if (handleSubroutine) {
                     const addr = readUInt16LE(e, 1);
                     lineBreak();
                     let loopCall = '';
-                    if (callID[addr] === null) {
-                        callID[addr] = label;
-                        label += 1;
-                        loopCall = `[\n${renderMML({
-                            sequence: sequences[addr],
+                    if (this.state.callID[addr] === null) {
+                        this.state.callID[addr] = this.state.label;
+                        this.state.label += 1;
+                        loopCall = `[${this.renderMML({
+                            sequence: this.sequences[addr],
                             noteLength,
                             prevQ,
-                        })}\n]`;
+                        })}]`;
                     }
-                    loopCall = `(${callID[addr]})${loopCall}${e[3]}`;
+                    loopCall = `(${this.state.callID[addr]})${loopCall}${e[3]}`;
                     add(loopCall);
                     lineBreak();
                     prevOctave = 0;
@@ -256,7 +291,7 @@ function render(options: {
                 break;
             }
             case h === 0xfa && e[1] === 0x06: {
-                vTable = e[2];
+                this.state.vTable = e[2];
                 break;
             }
             case h === 0xfc: {
@@ -264,15 +299,15 @@ function render(options: {
                 // add(`; ${printBBuffer(e)}    ; rmc called`);
                 lineBreak();
                 const addr = readUInt16LE(e, 1);
-                if (callID[addr] === null) {
-                    callID[addr] = label;
-                    label += 1;
-                    rmc.push(`(!${callID[addr] as number + 50000})[${renderMML({ sequence: sequences[addr] })}]`);
+                if (this.state.callID[addr] === null) {
+                    this.state.callID[addr] = this.state.label;
+                    this.state.label += 1;
+                    this.state.rmc.push(`(!${this.state.callID[addr] as number + 50000})[${this.renderMML({ sequence: this.sequences[addr] })}]`);
                 }
                 if (e[4] === 0) {
-                    add(`(!${callID[addr] as number + 50000}, ${readInt8(e, 3)})`);
+                    add(`(!${this.state.callID[addr] as number + 50000}, ${readInt8(e, 3)})`);
                 } else {
-                    add(`(!${callID[addr] as number + 50000}, ${readInt8(e, 3)}, ${e[4]})`);
+                    add(`(!${this.state.callID[addr] as number + 50000}, ${readInt8(e, 3)}, ${e[4]})`);
                 }
                 lineBreak();
                 break;
@@ -285,13 +320,13 @@ function render(options: {
             }
             offset += e.length;
 
-            if (!options.removeLoop) {
+            if (!this.options.removeLoop) {
                 if (channel >= 0
-                    && paraList.length > 1
-                    && paraList[1][channel] !== paraList[0][channel]
+                    && this.paraList.length > 1
+                    && this.paraList[1][channel] !== this.paraList[0][channel]
                     && !loopPut
-                    && offset >= paraList[1][channel]) {
-                    if (offset !== paraList[1][channel]) {
+                    && offset >= this.paraList[1][channel]) {
+                    if (offset !== this.paraList[1][channel]) {
                         throw new Error('Loop point malposition');
                     }
                     lineBreak();
@@ -311,10 +346,7 @@ function render(options: {
         return finalPrint.join('\n');
     }
 
-    function flattenSequenceData(subOptions: {
-        sequence: number[][]
-        handleSubroutine?: boolean
-    }) {
+    flattenSequenceData(subOptions: SequenceFlattenerOptions): number[][] {
         const { sequence, handleSubroutine } = subOptions;
         const rebuiltData: number[][] = [];
         let loopLeft = -1;
@@ -348,8 +380,8 @@ function render(options: {
             case h === 0xe9: {
                 if (handleSubroutine) {
                     const addr = readUInt16LE(e, 1);
-                    const data = flattenSequenceData({
-                        sequence: sequences[addr],
+                    const data = this.flattenSequenceData({
+                        sequence: this.sequences[addr],
                     });
                     for (let j = 0; j < e[3]; j++) {
                         rebuiltData.push(...data);
@@ -394,13 +426,18 @@ function render(options: {
         }
         return rebuiltData;
     }
+}
 
-    function renderMIDI(subOptions: {
-        sequence: number[][]
-        channel: MidiChannel
-        track: jsmidgen.Track
-    }) {
-        const tickScale = 10;
+// ==================== MIDI Renderer Class ====================
+class MIDIRenderer {
+    private options: RenderOptions;
+    private tickScale = 10;
+
+    constructor(options: RenderOptions) {
+        this.options = options;
+    }
+
+    renderMIDI(subOptions: MIDIRenderOptions): void {
         const { sequence, channel, track } = subOptions;
         // 上一次使用的音符
         let lastNote = -1;
@@ -426,7 +463,7 @@ function render(options: {
             switch (true) {
             case h >= 0x1 && h <= 0x7f: {
                 // note param
-                currentNoteLength = e[0] * tickScale;
+                currentNoteLength = e[0] * this.tickScale;
                 if (e.length > 1) {
                     currentNoteParam = e[1];
                 }
@@ -440,7 +477,7 @@ function render(options: {
                 }
                 const note = h - 0x80;
                 lastNote = note + 12 + (transportSMWInstrument[currentInstrument] ?? 0);
-                currentVelocity = (options.velocityTable[currentVelocityIndex][currentNoteParam & 0xF] / 255) * 127;
+                currentVelocity = (this.options.velocityTable[currentVelocityIndex][currentNoteParam & 0xF] / 255) * 127;
                 track.addNoteOn(channel, lastNote, holdLength, currentVelocity);
                 isNoteOn = true;
                 holdLength = currentNoteLength;
@@ -472,7 +509,7 @@ function render(options: {
                 track.setInstrument(channel, (h - 0xd0 + 21) as MidiParameterValue, holdLength);
                 currentInstrument = h - 0xd0 + 21;
                 lastNote = 60;
-                currentVelocity = (options.velocityTable[currentVelocityIndex][currentNoteParam & 0xF] / 255) * 127;
+                currentVelocity = (this.options.velocityTable[currentVelocityIndex][currentNoteParam & 0xF] / 255) * 127;
                 track.addNoteOn(channel, lastNote, 0, currentVelocity);
                 isNoteOn = true;
                 holdLength = currentNoteLength;
@@ -519,6 +556,13 @@ function render(options: {
             isNoteOn = false;
         }
     }
+}
+
+// ==================== Main Render Function ====================
+function render(options: RenderOptions) {
+    const mmlRenderer = new MMLRenderer(options);
+    const midiRenderer = new MIDIRenderer(options);
+    const { sequences, paraList } = options;
 
     let mml = '';
     const midi = new jsmidgen.File();
@@ -526,8 +570,8 @@ function render(options: {
         if (paraList[0][i] !== 0) {
             mml += `#${i}\n`;
             if (options.removeLoop) {
-                mml += renderMML({
-                    sequence: flattenSequenceData({
+                mml += mmlRenderer.renderMML({
+                    sequence: mmlRenderer.flattenSequenceData({
                         sequence: sequences[paraList[0][i]],
                         handleSubroutine: true,
                     }),
@@ -535,7 +579,7 @@ function render(options: {
                     handleSubroutine: true,
                 });
             } else {
-                mml += renderMML({
+                mml += mmlRenderer.renderMML({
                     sequence: sequences[paraList[0][i]],
                     channel: i,
                     handleSubroutine: true,
@@ -551,8 +595,8 @@ function render(options: {
                     },
                 } as any);
             }
-            renderMIDI({
-                sequence: flattenSequenceData({
+            midiRenderer.renderMIDI({
+                sequence: mmlRenderer.flattenSequenceData({
                     sequence: sequences[paraList[0][i]],
                     handleSubroutine: true,
                 }),
@@ -562,11 +606,11 @@ function render(options: {
             midi.addTrack(track);
         }
     }
-    mml = `${rmc.join('\n')}\n\n${mml}`;
+    mml = `${mmlRenderer.state.rmc.join('\n')}\n\n${mml}`;
     return {
-        lastInstrument,
+        lastInstrument: mmlRenderer.state.lastInstrument,
         mml,
-        vTable,
+        vTable: mmlRenderer.state.vTable,
         midi,
     };
 }
