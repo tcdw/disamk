@@ -1,91 +1,124 @@
-import { readUInt16LE } from './utils';
+import { readUInt16LE } from "./utils";
 
 interface ParseResult {
-    content: number[][];
-    jumps: number[];
+  content: number[][];
+  jumps: number[];
 }
 
 function parseSeq(aram: Uint8Array, beginPointer: number): ParseResult {
-    const vcmdStart = 0xda;
-    const vcmdLength = [
-        // eslint-disable-next-line indent
-                    0x02, 0x02, 0x03, 0x04, 0x04, 0x01, // DA-DF
-        0x02, 0x03, 0x02, 0x03, 0x02, 0x04, 0x02, 0x02, // E0-E7
-        0x03, 0x04, 0x02, 0x04, 0x04, 0x03, 0x02, 0x04, // E8-EF
-        0x01, 0x04, 0x04, 0x03, 0x02, 0x09, 0x03, 0x04, // F0-F7
-        0x02, 0x03, 0x03, 0x04, 0x05, 0x01, 0x01, 0x00, // F8-FF
-    ];
-    const content: number[][] = [];
-    const jumps: number[] = [];
-    let nowPointer = beginPointer;
-    let now = 0;
-    do {
-        now = aram[nowPointer];
+  const vcmdStart = 0xda;
+  const vcmdLength = [
+    // eslint-disable-next-line indent
+    0x02,
+    0x02,
+    0x03,
+    0x04,
+    0x04,
+    0x01, // DA-DF
+    0x02,
+    0x03,
+    0x02,
+    0x03,
+    0x02,
+    0x04,
+    0x02,
+    0x02, // E0-E7
+    0x03,
+    0x04,
+    0x02,
+    0x04,
+    0x04,
+    0x03,
+    0x02,
+    0x04, // E8-EF
+    0x01,
+    0x04,
+    0x04,
+    0x03,
+    0x02,
+    0x09,
+    0x03,
+    0x04, // F0-F7
+    0x02,
+    0x03,
+    0x03,
+    0x04,
+    0x05,
+    0x01,
+    0x01,
+    0x00, // F8-FF
+  ];
+  const content: number[][] = [];
+  const jumps: number[] = [];
+  let nowPointer = beginPointer;
+  let now = 0;
+  do {
+    now = aram[nowPointer];
 
-        switch (true) {
-        // track end
-        case now === 0x0: {
-            break;
+    switch (true) {
+      // track end
+      case now === 0x0: {
+        break;
+      }
+      // note duration/velocity
+      case now >= 0x1 && now <= 0x7f: {
+        const temp: number[] = [];
+        temp.push(now);
+        // duration rate & velocity rate
+        if (aram[nowPointer + 1] >= 0x1 && aram[nowPointer + 1] <= 0x7f) {
+          temp.push(aram[nowPointer + 1]);
+          nowPointer += 1;
         }
-        // note duration/velocity
-        case now >= 0x1 && now <= 0x7f: {
-            const temp: number[] = [];
-            temp.push(now);
-            // duration rate & velocity rate
-            if (aram[nowPointer + 1] >= 0x1 && aram[nowPointer + 1] <= 0x7f) {
-                temp.push(aram[nowPointer + 1]);
-                nowPointer += 1;
-            }
-            content.push(temp);
-            nowPointer += 1;
-            break;
-        }
-        // note
-        case now >= 0x80 && now <= 0xc7: {
-            content.push([now]);
-            nowPointer += 1;
-            break;
-        }
-        // percussion
-        case now >= 0xd0 && now <= 0xd9: {
-            content.push([now]);
-            nowPointer += 1;
-            break;
-        }
-        // commands
-        case now >= vcmdStart && now <= 0xff: {
-            let len = vcmdLength[now - vcmdStart];
+        content.push(temp);
+        nowPointer += 1;
+        break;
+      }
+      // note
+      case now >= 0x80 && now <= 0xc7: {
+        content.push([now]);
+        nowPointer += 1;
+        break;
+      }
+      // percussion
+      case now >= 0xd0 && now <= 0xd9: {
+        content.push([now]);
+        nowPointer += 1;
+        break;
+      }
+      // commands
+      case now >= vcmdStart && now <= 0xff: {
+        let len = vcmdLength[now - vcmdStart];
 
-            // special: e9 [xx yy] zz
-            if (now === 0xe9) {
-                jumps.push(readUInt16LE(aram, nowPointer + 1));
-            }
-
-            // special: fc [ww xx] yy zz
-            if (now === 0xfc) {
-                jumps.push(readUInt16LE(aram, nowPointer + 1));
-            }
-
-            // special: fb xx (< $80) yy [...zz], xx is amount of zz
-            if (now === 0xfb && aram[nowPointer + 1] < 0x80) {
-                len += aram[nowPointer + 1] - 1;
-            }
-
-            // 把 nowPointer 到 nowPointer + len 的一段复制成新的数组
-            const temp = aram.slice(nowPointer, nowPointer + len);
-            // aram.copy(temp, 0, nowPointer, nowPointer + len);
-            content.push([...temp]);
-            nowPointer += len;
-            break;
+        // special: e9 [xx yy] zz
+        if (now === 0xe9) {
+          jumps.push(readUInt16LE(aram, nowPointer + 1));
         }
-        // unknown
-        default: {
-            throw new Error(`Unexpected command 0x${now.toString(16)} at 0x${nowPointer.toString(16)}`);
-        }
-        }
-    } while (now !== 0);
 
-    return { content, jumps };
+        // special: fc [ww xx] yy zz
+        if (now === 0xfc) {
+          jumps.push(readUInt16LE(aram, nowPointer + 1));
+        }
+
+        // special: fb xx (< $80) yy [...zz], xx is amount of zz
+        if (now === 0xfb && aram[nowPointer + 1] < 0x80) {
+          len += aram[nowPointer + 1] - 1;
+        }
+
+        // 把 nowPointer 到 nowPointer + len 的一段复制成新的数组
+        const temp = aram.slice(nowPointer, nowPointer + len);
+        // aram.copy(temp, 0, nowPointer, nowPointer + len);
+        content.push([...temp]);
+        nowPointer += len;
+        break;
+      }
+      // unknown
+      default: {
+        throw new Error(`Unexpected command 0x${now.toString(16)} at 0x${nowPointer.toString(16)}`);
+      }
+    }
+  } while (now !== 0);
+
+  return { content, jumps };
 }
 
 export default parseSeq;
