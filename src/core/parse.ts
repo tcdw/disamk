@@ -1,4 +1,3 @@
-/* eslint-disable no-control-regex */
 // noinspection GrazieInspection
 
 import jsmidgen from "jsmidgen";
@@ -20,6 +19,59 @@ export interface ParseOptions {
   removeLoop?: boolean;
 }
 
+const ANY_BYTE = -1;
+
+const SONG_POINTER_PATTERN = [
+  0xf6,
+  ANY_BYTE,
+  ANY_BYTE,
+  0x2d,
+  0xc4,
+  0x40,
+  0xf6,
+  ANY_BYTE,
+  ANY_BYTE,
+  0x2d,
+  0xc4,
+  0x41,
+] as const;
+
+const VELOCITY_TABLE_PATTERN = [
+  0xf0,
+  0x02,
+  0x08,
+  0x10,
+  0xfd,
+  0xf6,
+  ANY_BYTE,
+  ANY_BYTE,
+  0xd5,
+  0x11,
+  0x02,
+  0x09,
+  0x48,
+  0x5c,
+] as const;
+
+// Scan raw ARAM bytes directly so runtime-specific latin1 / windows-1252 decoding never shifts offsets.
+function findBytePattern(src: Uint8Array, pattern: readonly number[]) {
+  const lastStart = src.length - pattern.length;
+  for (let offset = 0; offset <= lastStart; offset++) {
+    let matched = true;
+    for (let i = 0; i < pattern.length; i++) {
+      const expected = pattern[i];
+      if (expected !== ANY_BYTE && src[offset + i] !== expected) {
+        matched = false;
+        break;
+      }
+    }
+    if (matched) {
+      return offset;
+    }
+  }
+  return -1;
+}
+
 // F0 02 08 10 FD F6 __ __ D5 11 02 09 48 5C
 
 function parse(input: ArrayBuffer, options: ParseOptions): Parsed {
@@ -39,14 +91,12 @@ function parse(input: ArrayBuffer, options: ParseOptions): Parsed {
     mov     $41, a                      ; c4 41
     */
   // 搜索 sequence list
-  const reader = new TextDecoder("latin1");
-  const stringBinary = reader.decode(spcFile.aram);
-  const matched = /\xf6[\x00-\xff]{2}\x2d\xc4\x40\xf6[\x00-\xff]{2}\x2d\xc4\x41/.exec(stringBinary);
-  if (!matched) {
+  const songPointerIndex = findBytePattern(spcFile.aram, SONG_POINTER_PATTERN);
+  if (songPointerIndex === -1) {
     throw new Error("Unable to find song pointer");
   }
-  const pointerA = readUInt16LE(spcFile.aram, matched.index + 1) + 2;
-  const pointerB = readUInt16LE(spcFile.aram, matched.index + 7) + 1;
+  const pointerA = readUInt16LE(spcFile.aram, songPointerIndex + 1) + 2;
+  const pointerB = readUInt16LE(spcFile.aram, songPointerIndex + 7) + 1;
   if (pointerA !== pointerB) {
     throw new Error("Bad song pointers");
   }
@@ -61,11 +111,11 @@ function parse(input: ArrayBuffer, options: ParseOptions): Parsed {
     mov    $0211+x, a                   ; D5 11 02
     or     ($5c), ($48)                 ; 09 48 5C
     */
-  const velocityMatched = /\xF0\x02\x08\x10\xFD\xF6[\x00-\xff]{2}\xD5\x11\x02\x09\x48\x5C/.exec(stringBinary);
-  if (!velocityMatched) {
+  const velocityPointerIndex = findBytePattern(spcFile.aram, VELOCITY_TABLE_PATTERN);
+  if (velocityPointerIndex === -1) {
     throw new Error("Unable to find velocity table pointer");
   }
-  const velocityPointer = readUInt16LE(spcFile.aram, velocityMatched.index + 6);
+  const velocityPointer = readUInt16LE(spcFile.aram, velocityPointerIndex + 6);
   const velocityTable = [
     spcFile.aram.slice(velocityPointer, velocityPointer + 0x10),
     spcFile.aram.slice(velocityPointer + 0x10, velocityPointer + 0x20),
