@@ -103,7 +103,17 @@ export default class MIDIRenderer {
           break;
         }
         case h === 0xe0: {
-          // todo global volume
+          const volume = (e[1] * 127 + 127) / 255;
+          track.addEvent(
+            new jsmidgen.Event({
+              type: jsmidgen.Event.CONTROLLER,
+              channel,
+              param1: 0x07,
+              param2: volume as MidiParameterValue,
+              time: holdLength,
+            }),
+          );
+          holdLength = 0;
           break;
         }
         case h === 0xe2: {
@@ -113,7 +123,17 @@ export default class MIDIRenderer {
           break;
         }
         case h === 0xe7: {
-          // todo volume
+          const volume = (e[1] * 127 + 127) / 255;
+          track.addEvent(
+            new jsmidgen.Event({
+              type: jsmidgen.Event.CONTROLLER,
+              channel,
+              param1: 0x0b,
+              param2: volume as MidiParameterValue,
+              time: holdLength,
+            }),
+          );
+          holdLength = 0;
           break;
         }
         case h === 0xfa && e[1] === 0x06: {
