@@ -13,3 +13,23 @@ You can try open the generated txt file with other text editors, such as Sublime
 ## Why this tool exists?
 
 The main reason I made this is letting people recovering the source file from a single SPC, or learning porting tricks from SPCs released in SMWC Idol/Super Famicompo/etc.
+
+## Deployment
+
+This repository includes a GitHub Actions workflow at `.github/workflows/deploy-neocities.yml`.
+
+When code is pushed to `master` (or when the workflow is started manually), it will:
+
+1. Install dependencies with pnpm
+2. Build the site into `dist/`
+3. Copy the build output into a temporary `disamk_web/` directory
+4. Delete the existing remote `disamk_web` directory on Neocities
+5. Upload the rebuilt site to `https://tcdwww.neocities.org/disamk_web`
+
+### Required GitHub secret
+
+Add this repository secret before enabling the workflow:
+
+- `NEOCITIES_API_KEY`: your Neocities API key
+
+The target remote directory is currently configured directly in the workflow as `NEOCITIES_SITE_DIR: disamk_web`. If you ever want to deploy somewhere else, update that value in the workflow file.

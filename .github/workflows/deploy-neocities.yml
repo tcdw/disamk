@@ -1,0 +1,80 @@
+name: Deploy to Neocities
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-neocities
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: "24"
+  RUBY_VERSION: "3.3"
+  NEOCITIES_SITE_DIR: disamk_web
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        run: pnpm build
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ env.RUBY_VERSION }}
+
+      - name: Install Neocities CLI
+        run: gem install neocities --no-document
+
+      - name: Verify deploy configuration
+        env:
+          NEOCITIES_API_KEY: ${{ secrets.NEOCITIES_API_KEY }}
+        run: |
+          test -n "${NEOCITIES_SITE_DIR}"
+          test -n "${NEOCITIES_API_KEY}"
+
+      - name: Prepare upload directory
+        run: |
+          rm -rf .neocities-deploy
+          mkdir -p ".neocities-deploy/${NEOCITIES_SITE_DIR}"
+          cp -R dist/. ".neocities-deploy/${NEOCITIES_SITE_DIR}/"
+
+      - name: Remove existing remote directory
+        env:
+          NEOCITIES_API_KEY: ${{ secrets.NEOCITIES_API_KEY }}
+        run: |
+          if neocities list "/${NEOCITIES_SITE_DIR}" > /dev/null 2>&1; then
+            neocities delete "${NEOCITIES_SITE_DIR}"
+          else
+            echo "Remote directory ${NEOCITIES_SITE_DIR} does not exist yet, skipping delete."
+          fi
+
+      - name: Deploy to Neocities
+        env:
+          NEOCITIES_API_KEY: ${{ secrets.NEOCITIES_API_KEY }}
+        run: neocities push .neocities-deploy
