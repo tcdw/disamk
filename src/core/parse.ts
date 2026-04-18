@@ -1,16 +1,14 @@
-// noinspection GrazieInspection
-
-import jsmidgen from "jsmidgen";
 import parseSeq from "./parseSeq";
-import render from "./renderMML";
 import handleSample, { ISample } from "./sample";
 import SPCFile from "./SPCFile";
+import { buildMidiFile, render } from "./render";
+import { InstrumentMappingTable, MIDIRenderData } from "./renderTypes";
 import { readUInt16LE } from "./utils";
 
 export interface Parsed {
   mmlFile: string;
   samples: ISample[];
-  midiFile: jsmidgen.File;
+  midiData: MIDIRenderData;
 }
 
 export interface ParseOptions {
@@ -189,7 +187,7 @@ function parse(input: ArrayBuffer, options: ParseOptions): Parsed {
     sequences[e] = result.content;
   });
   otherPointers.push(...rest);
-  const { lastInstrument, mml, vTable, midi } = render({
+  const { lastInstrument, mml, vTable, midiData } = render({
     sequences,
     paraList,
     otherPointers,
@@ -204,7 +202,11 @@ function parse(input: ArrayBuffer, options: ParseOptions): Parsed {
   }
   mmlFile += header;
   mmlFile += mml;
-  return { mmlFile, samples, midiFile: midi };
+  return { mmlFile, samples, midiData };
 }
 
 export default parse;
+
+export function buildMappedMIDI(parsed: Parsed, mappingTable: InstrumentMappingTable) {
+  return buildMidiFile(parsed.midiData, mappingTable);
+}

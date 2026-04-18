@@ -1,139 +1,228 @@
 /* eslint-disable no-bitwise */
 import jsmidgen, { MidiChannel, MidiParameterValue } from "jsmidgen";
-import { RenderOptions, MIDIRenderOptions } from "./renderTypes";
+import { GM_DRUM_CHANNEL, clampGeneralMidiProgram } from "./generalMidi";
+import { InstrumentMappingTable, MIDIRenderOptions } from "./renderTypes";
 
 const transportSMWInstrument = [0, 0, 5, 0, 0, 0, 0, 0, 0, -5, 6, 0, -5, 0, 0, 8, 0, 0, 0];
 
+interface MIDIRendererOptions {
+  velocityTable: Uint8Array[];
+}
+
+interface TrackState {
+  track: jsmidgen.Track;
+  channel: MidiChannel;
+  time: number;
+  currentProgram: number | null;
+}
+
+interface ActiveNote {
+  target: "melody" | "drums";
+  note: number;
+  velocity: MidiParameterValue;
+}
+
 export default class MIDIRenderer {
-  private options: RenderOptions;
+  private options: MIDIRendererOptions;
 
   private tickScale = 10;
 
-  constructor(options: RenderOptions) {
+  constructor(options: MIDIRendererOptions) {
     this.options = options;
   }
 
-  renderMIDI(subOptions: MIDIRenderOptions): void {
-    const { sequence, channel, track } = subOptions;
-    // 上一次使用的音符
-    let lastNote = -1;
-    // 当前音符长度
-    let currentNoteLength = 0;
-    // 待添加到下一次事件的长度
-    let holdLength = 0;
-    // 当前是否有音符在播放
-    let isNoteOn = false;
-    // 当前音色
-    let currentInstrument = 0;
-    // 当前音符属性
-    let currentNoteParam = 0x7f;
-    // 当前音符音量换算表
-    let currentVelocityIndex = 0;
-    // 当前音符音量
-    let currentVelocity = 127;
+  private clampMidiValue(value: number) {
+    return Math.max(0, Math.min(127, Math.round(value))) as MidiParameterValue;
+  }
 
-    sequence.forEach((e, i) => {
+  private getTrackDelta(trackState: TrackState, time: number) {
+    return Math.max(0, time - trackState.time);
+  }
+
+  private setTrackTime(trackState: TrackState, time: number) {
+    trackState.time = Math.max(trackState.time, time);
+  }
+
+  private addNoteOn(trackState: TrackState, note: number, velocity: MidiParameterValue, time: number) {
+    trackState.track.addNoteOn(trackState.channel, note, this.getTrackDelta(trackState, time), velocity);
+    this.setTrackTime(trackState, time);
+  }
+
+  private addNoteOff(trackState: TrackState, note: number, velocity: MidiParameterValue, time: number) {
+    trackState.track.addNoteOff(trackState.channel, note, this.getTrackDelta(trackState, time), velocity);
+    this.setTrackTime(trackState, time);
+  }
+
+  private addController(trackState: TrackState, controller: number, value: number, time: number) {
+    trackState.track.addEvent(
+      new jsmidgen.Event({
+        type: jsmidgen.Event.CONTROLLER,
+        channel: trackState.channel,
+        param1: controller as MidiParameterValue,
+        param2: this.clampMidiValue(value),
+        time: this.getTrackDelta(trackState, time),
+      }),
+    );
+    this.setTrackTime(trackState, time);
+  }
+
+  private setTempo(trackState: TrackState, bpm: number, time: number) {
+    trackState.track.tempo(bpm, this.getTrackDelta(trackState, time));
+    this.setTrackTime(trackState, time);
+  }
+
+  private ensureProgram(trackState: TrackState, program: number, time: number) {
+    const nextProgram = clampGeneralMidiProgram(program);
+    if (trackState.currentProgram === nextProgram) {
+      return;
+    }
+
+    trackState.track.setInstrument(
+      trackState.channel,
+      nextProgram as MidiParameterValue,
+      this.getTrackDelta(trackState, time),
+    );
+    trackState.currentProgram = nextProgram;
+    this.setTrackTime(trackState, time);
+  }
+
+  private resolveMapping(mappingTable: InstrumentMappingTable, instrument: number) {
+    return (
+      mappingTable[instrument] ?? {
+        instrument,
+        mode: "gm" as const,
+        gmProgram: clampGeneralMidiProgram(instrument),
+      }
+    );
+  }
+
+  private getNoteVelocity(velocityIndex: number, noteParam: number) {
+    const table = this.options.velocityTable[velocityIndex] ?? this.options.velocityTable[0];
+    return this.clampMidiValue((table[noteParam & 0xf] / 255) * 127);
+  }
+
+  private getRenderedNote(note: number, instrument: number) {
+    return this.clampMidiValue(note + 12 + (transportSMWInstrument[instrument] ?? 0));
+  }
+
+  renderMIDI(subOptions: MIDIRenderOptions): void {
+    const { sequence, sourceChannel, melodicTrack, drumTrack, mappingTable } = subOptions;
+    const melodyState: TrackState = {
+      track: melodicTrack,
+      channel: sourceChannel as MidiChannel,
+      time: 0,
+      currentProgram: null,
+    };
+    const drumState: TrackState = {
+      track: drumTrack,
+      channel: GM_DRUM_CHANNEL,
+      time: 0,
+      currentProgram: null,
+    };
+
+    let currentTime = 0;
+    let currentNoteLength = 0;
+    let currentInstrument = 0;
+    let currentNoteParam = 0x7f;
+    let currentVelocityIndex = 0;
+    let activeNote: ActiveNote | null = null;
+
+    const stopActiveNote = () => {
+      if (activeNote === null) {
+        return;
+      }
+
+      const targetState = activeNote.target === "melody" ? melodyState : drumState;
+      this.addNoteOff(targetState, activeNote.note, activeNote.velocity, currentTime);
+      activeNote = null;
+    };
+
+    const startNote = (target: "melody" | "drums", note: number) => {
+      const mapping = this.resolveMapping(mappingTable, currentInstrument);
+      const velocity = this.getNoteVelocity(currentVelocityIndex, currentNoteParam);
+      const targetState = target === "melody" ? melodyState : drumState;
+
+      if (target === "melody") {
+        this.ensureProgram(targetState, mapping.gmProgram, currentTime);
+      }
+
+      this.addNoteOn(targetState, note, velocity, currentTime);
+      activeNote = {
+        target,
+        note,
+        velocity,
+      };
+    };
+
+    const addMirroredController = (controller: number, value: number) => {
+      this.addController(melodyState, controller, value, currentTime);
+      this.addController(drumState, controller, value, currentTime);
+    };
+
+    sequence.forEach(e => {
       const h = e[0];
-      const next = sequence[i + 1] || {};
+      const mapping = this.resolveMapping(mappingTable, currentInstrument);
 
       switch (true) {
         case h >= 0x1 && h <= 0x7f: {
-          // note param
-          currentNoteLength = e[0] * this.tickScale;
+          currentNoteLength = h * this.tickScale;
           if (e.length > 1) {
             currentNoteParam = e[1];
           }
           break;
         }
         case h >= 0x80 && h <= 0xc5: {
-          if (isNoteOn) {
-            track.addNoteOff(channel, lastNote, holdLength, currentVelocity);
-            isNoteOn = false;
-            holdLength = 0;
+          stopActiveNote();
+
+          if (mapping.mode === "gm") {
+            startNote("melody", this.getRenderedNote(h - 0x80, currentInstrument));
+          } else if (mapping.mode === "drums") {
+            startNote("drums", this.getRenderedNote(h - 0x80, currentInstrument));
           }
-          const note = h - 0x80;
-          lastNote = note + 12 + (transportSMWInstrument[currentInstrument] ?? 0);
-          currentVelocity = (this.options.velocityTable[currentVelocityIndex][currentNoteParam & 0xf] / 255) * 127;
-          track.addNoteOn(channel, lastNote, holdLength, currentVelocity);
-          isNoteOn = true;
-          holdLength = currentNoteLength;
+
+          currentTime += currentNoteLength;
           break;
         }
         case h === 0xc6: {
-          // tie
-          holdLength += currentNoteLength;
+          currentTime += currentNoteLength;
           break;
         }
         case h === 0xc7: {
-          // rest
-          if (isNoteOn) {
-            track.addNoteOff(channel, lastNote, holdLength, currentVelocity);
-            isNoteOn = false;
-            lastNote = -1;
-            holdLength = currentNoteLength;
-          } else {
-            holdLength += currentNoteLength;
-          }
+          stopActiveNote();
+          currentTime += currentNoteLength;
           break;
         }
         case h >= 0xd0 && h <= 0xd9: {
-          if (isNoteOn) {
-            track.addNoteOff(channel, lastNote, holdLength, currentVelocity);
-            isNoteOn = false;
-            holdLength = 0;
-          }
-          track.setInstrument(channel, (h - 0xd0 + 21) as MidiParameterValue, holdLength);
           currentInstrument = h - 0xd0 + 21;
-          lastNote = 60;
-          currentVelocity = (this.options.velocityTable[currentVelocityIndex][currentNoteParam & 0xf] / 255) * 127;
-          track.addNoteOn(channel, lastNote, 0, currentVelocity);
-          isNoteOn = true;
-          holdLength = currentNoteLength;
+          stopActiveNote();
+
+          if (this.resolveMapping(mappingTable, currentInstrument).mode === "gm") {
+            startNote("melody", 60);
+          } else if (this.resolveMapping(mappingTable, currentInstrument).mode === "drums") {
+            startNote("drums", 60);
+          }
+
+          currentTime += currentNoteLength;
           break;
         }
         case h === 0xda: {
-          // instrument
-          track.setInstrument(channel, e[1] as MidiParameterValue, holdLength);
+          stopActiveNote();
           currentInstrument = e[1];
-          holdLength = 0;
           break;
         }
         case h === 0xdb: {
-          // todo pan
           break;
         }
         case h === 0xe0: {
-          const volume = (e[1] * 127 + 127) / 255;
-          track.addEvent(
-            new jsmidgen.Event({
-              type: jsmidgen.Event.CONTROLLER,
-              channel,
-              param1: 0x07,
-              param2: volume as MidiParameterValue,
-              time: holdLength,
-            }),
-          );
-          holdLength = 0;
+          addMirroredController(0x07, (e[1] * 127 + 127) / 255);
           break;
         }
         case h === 0xe2: {
-          // todo tempo
-          track.tempo(e[1] / 0.4096, holdLength);
-          holdLength = 0;
+          this.setTempo(melodyState, e[1] / 0.4096, currentTime);
           break;
         }
         case h === 0xe7: {
-          const volume = (e[1] * 127 + 127) / 255;
-          track.addEvent(
-            new jsmidgen.Event({
-              type: jsmidgen.Event.CONTROLLER,
-              channel,
-              param1: 0x0b,
-              param2: volume as MidiParameterValue,
-              time: holdLength,
-            }),
-          );
-          holdLength = 0;
+          addMirroredController(0x0b, (e[1] * 127 + 127) / 255);
           break;
         }
         case h === 0xfa && e[1] === 0x06: {
@@ -146,10 +235,6 @@ export default class MIDIRenderer {
       }
     });
 
-    // cleanup
-    if (isNoteOn) {
-      track.addNoteOff(channel, lastNote, holdLength, currentVelocity);
-      isNoteOn = false;
-    }
+    stopActiveNote();
   }
 }

@@ -20,8 +20,10 @@ export interface MMLRenderOptions {
 
 export interface MIDIRenderOptions {
   sequence: number[][];
-  channel: MidiChannel;
-  track: jsmidgen.Track;
+  sourceChannel: number;
+  melodicTrack: jsmidgen.Track;
+  drumTrack: jsmidgen.Track;
+  mappingTable: InstrumentMappingTable;
 }
 
 export interface SequenceFlattenerOptions {
@@ -35,4 +37,32 @@ export interface MMLState {
   lastInstrument: number;
   callID: { [key: number]: number | null };
   rmc: string[];
+}
+
+export interface SourceChannelRender {
+  sourceChannel: number;
+  flattenedSequence: number[][];
+}
+
+export interface InstrumentUsage {
+  instrument: number;
+  channels: number[];
+  noteCount: number;
+  switchCount: number;
+}
+
+export type InstrumentMappingMode = "gm" | "drums" | "skip";
+
+export interface InstrumentMapping {
+  instrument: number;
+  mode: InstrumentMappingMode;
+  gmProgram: number;
+}
+
+export type InstrumentMappingTable = Record<number, InstrumentMapping>;
+
+export interface MIDIRenderData {
+  velocityTable: Uint8Array[];
+  channels: SourceChannelRender[];
+  instrumentUsages: InstrumentUsage[];
 }

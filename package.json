@@ -19,17 +19,19 @@
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
     "autoprefixer": "^10.4.21",
+    "daisyui": "4.12.24",
     "del-cli": "^5.1.0",
     "postcss": "^8.5.6",
     "prettier": "^3.8.1",
     "sass": "^1.92.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.9.2",
-    "vite": "^5.4.20"
+    "vite": "^5.4.20",
+    "vite-plugin-solid": "^2.11.12"
   },
   "dependencies": {
     "jsmidgen": "^0.1.5",
     "jszip": "^3.10.1",
-    "preline": "^2.7.0"
+    "solid-js": "^1.9.12"
   }
 }

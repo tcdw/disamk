@@ -396,10 +396,6 @@ export class MMLRenderer {
         }
       }
     });
-    if (handleSubroutine) {
-      // eslint-disable-next-line no-console
-      console.log(totalTicks);
-    }
     return rebuiltData;
   }
 }
