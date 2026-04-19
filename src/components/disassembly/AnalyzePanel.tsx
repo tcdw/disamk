@@ -5,7 +5,7 @@ export default function AnalyzePanel() {
   const app = useDisassemblyContext();
 
   return (
-    <div class="rounded-[1.75rem] border border-base-300/80 bg-base-100/90 p-5 shadow-soft md:p-6">
+    <div class="rounded-[1.75rem] bg-base-100/90 p-5 md:p-6">
       <form
         class="space-y-5"
         onSubmit={event => {
@@ -14,9 +14,9 @@ export default function AnalyzePanel() {
         }}
       >
         <div class="space-y-2">
-          <div class="text-sm font-semibold uppercase tracking-[0.24em] text-base-content/50">Analyze SPC</div>
+          <div class="text-xl font-semibold">Analyze SPC</div>
           <p class="text-sm leading-6 text-base-content/70">
-            Pick a file, choose how strict the MML should be, then let the mapping panel appear below.
+            Pick a file, choose how the MML should be, then let the mapping panel appear below.
           </p>
         </div>
 
@@ -39,7 +39,7 @@ export default function AnalyzePanel() {
         </fieldset>
 
         <div class="grid gap-3">
-          <label class="flex cursor-pointer items-start gap-3 rounded-3xl border border-base-300/80 bg-base-200/40 px-4 py-4">
+          <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-base-300/80 bg-base-200/40 px-4 py-4">
             <input
               type="checkbox"
               class="checkbox checkbox-primary mt-0.5"
@@ -48,7 +48,7 @@ export default function AnalyzePanel() {
                 app.updateAbsLen(event.currentTarget.checked);
               }}
             />
-            <div>
+            <div class="space-y-1">
               <div class="font-semibold text-base-content">Always output absolute note length</div>
               <div class="text-sm leading-6 text-base-content/65">
                 Useful if you want the recovered MML to mirror exact ticks rather than note syntax.
@@ -56,7 +56,7 @@ export default function AnalyzePanel() {
             </div>
           </label>
 
-          <label class="flex cursor-pointer items-start gap-3 rounded-3xl border border-base-300/80 bg-base-200/40 px-4 py-4">
+          <label class="flex cursor-pointer items-start gap-3 rounded-2xl border border-base-300/80 bg-base-200/40 px-4 py-4">
             <input
               type="checkbox"
               class="checkbox checkbox-primary mt-0.5"
@@ -65,7 +65,7 @@ export default function AnalyzePanel() {
                 app.updateSmwAlias(event.currentTarget.checked);
               }}
             />
-            <div>
+            <div class="space-y-1">
               <div class="font-semibold text-base-content">Use SMW aliases in #instruments</div>
               <div class="text-sm leading-6 text-base-content/65">
                 Keeps the sample header friendlier if you plan to bring the output back into AddmusicK.

@@ -2,94 +2,48 @@
 
 @plugin "@tailwindcss/forms";
 @plugin "@tailwindcss/typography";
-@plugin "daisyui" {
-  themes: false;
-}
-@plugin "daisyui/theme" {
-  name: "disamk";
-  default: true;
-  prefersdark: false;
-  color-scheme: light;
-  --color-primary: #b2456a;
-  --color-primary-content: #fff8fb;
-  --color-secondary: #4b7597;
-  --color-secondary-content: #f6fbff;
-  --color-accent: #d98752;
-  --color-accent-content: #fff7f1;
-  --color-neutral: #2d1f27;
-  --color-neutral-content: #fff7fb;
-  --color-base-100: #fffaf8;
-  --color-base-200: #f7ece8;
-  --color-base-300: #e8d5ce;
-  --color-base-content: #2f2228;
-  --color-info: #4c8dd9;
-  --color-info-content: #eff7ff;
-  --color-success: #4c8963;
-  --color-success-content: #f4fcf7;
-  --color-warning: #d17b34;
-  --color-warning-content: #fff8f0;
-  --color-error: #c9545d;
-  --color-error-content: #fff6f7;
-  --radius-box: 1.5rem;
-  --radius-selector: 1rem;
-  --radius-field: 1rem;
-  --size-selector: 0.25rem;
-  --size-field: 0.25rem;
-  --border: 1px;
-  --depth: 1;
-  --noise: 0;
-}
-
+@plugin "daisyui";
 @theme {
-  --font-sans: "Space Grotesk", "Microsoft YaHei", sans-serif;
-  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
-  --shadow-soft: 0 24px 70px -32px rgba(71, 39, 53, 0.38);
-}
+  --color-primary-50: var(--color-sky-50);
+  --color-primary-100: var(--color-sky-100);
+  --color-primary-200: var(--color-sky-200);
+  --color-primary-300: var(--color-sky-300);
+  --color-primary-400: var(--color-sky-400);
+  --color-primary-500: var(--color-sky-500);
+  --color-primary-600: var(--color-sky-600);
+  --color-primary-700: var(--color-sky-700);
+  --color-primary-800: var(--color-sky-800);
+  --color-primary-900: var(--color-sky-900);
+  --color-primary-950: var(--color-sky-950);
 
-@layer components {
-  .surface-card {
-    @apply border border-base-300 bg-base-100 shadow-soft backdrop-blur-xl;
-  }
-}
-
-html,
-body,
-#root {
-  min-height: 100%;
-}
-
-:root {
-  color: #2a1d25;
-  background-color: #fff8f5;
+  --color-accent-50: var(--color-amber-50);
+  --color-accent-100: var(--color-amber-100);
+  --color-accent-200: var(--color-amber-200);
+  --color-accent-300: var(--color-amber-300);
+  --color-accent-400: var(--color-amber-400);
+  --color-accent-500: var(--color-amber-500);
+  --color-accent-600: var(--color-amber-600);
+  --color-accent-700: var(--color-amber-700);
+  --color-accent-800: var(--color-amber-800);
+  --color-accent-900: var(--color-amber-900);
+  --color-accent-950: var(--color-amber-950);
 }
 
 body {
-  margin: 0;
-  background:
-    radial-gradient(circle at top left, rgba(214, 110, 146, 0.24), transparent 30%),
-    radial-gradient(circle at 80% 20%, rgba(80, 124, 168, 0.18), transparent 28%),
-    linear-gradient(180deg, #fff9f7 0%, #fff2ee 52%, #f8ebe6 100%);
-  color: var(--color-base-content);
+  background-image: url("data:image/svg+xml,%3Csvg width='500' height='500' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23d6d6d6' fill-opacity='0.37' fill-rule='evenodd'/%3E%3C/svg%3E");
+  @media screen and (prefers-color-scheme: dark) {
+    background-image: url("data:image/svg+xml,%3Csvg width='500' height='500' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff20' fill-opacity='0.37' fill-rule='evenodd'/%3E%3C/svg%3E");
+  }
 }
 
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgba(95, 78, 91, 0.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(95, 78, 91, 0.05) 1px, transparent 1px);
-  background-size: 32px 32px;
-  mask-image: radial-gradient(circle at center, black 35%, transparent 100%);
+.prose a:hover {
+  border-color: var(--color-accent-300);
+  background-color: var(--color-accent-100);
 }
 
-::selection {
-  background: rgba(178, 69, 106, 0.18);
-}
-
-code,
-pre,
-.font-mono {
-  font-feature-settings: "liga" 0;
+@media (prefers-color-scheme: dark) {
+  .prose a:hover {
+    border-color: var(--color-accent-700);
+    background-color: var(--color-accent-950);
+  }
 }
