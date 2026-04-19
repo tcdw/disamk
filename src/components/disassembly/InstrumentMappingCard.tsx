@@ -35,8 +35,8 @@ export default function InstrumentMappingCard(props: InstrumentMappingCardProps)
         </div>
 
         <div class="grid w-full gap-3 md:max-w-xl md:grid-cols-[minmax(200px,220px)_minmax(0,1fr)]">
-          <label class="form-control gap-2">
-            <span class="label-text font-semibold text-base-content">Output mode</span>
+          <fieldset class="fieldset gap-2">
+            <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">Output mode</legend>
             <select
               class="select select-bordered w-full"
               value={currentMapping().mode}
@@ -48,12 +48,12 @@ export default function InstrumentMappingCard(props: InstrumentMappingCardProps)
               <option value="drums">Channel 10 drums</option>
               <option value="skip">Skip in MIDI</option>
             </select>
-          </label>
+          </fieldset>
 
           <Switch>
             <Match when={currentMapping().mode === "gm"}>
-              <label class="form-control gap-2">
-                <span class="label-text font-semibold text-base-content">GM program</span>
+              <fieldset class="fieldset gap-2">
+                <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">GM program</legend>
                 <select
                   class="select select-bordered w-full"
                   value={String(currentMapping().gmProgram)}
@@ -69,7 +69,7 @@ export default function InstrumentMappingCard(props: InstrumentMappingCardProps)
                     )}
                   </For>
                 </select>
-              </label>
+              </fieldset>
             </Match>
 
             <Match when={currentMapping().mode === "drums"}>

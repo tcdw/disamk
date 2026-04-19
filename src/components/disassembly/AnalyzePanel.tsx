@@ -26,8 +26,8 @@ export default function AnalyzePanel() {
           </div>
         </Show>
 
-        <label class="form-control gap-2">
-          <span class="label-text font-semibold text-base-content">SPC file</span>
+        <fieldset class="fieldset gap-2">
+          <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">SPC file</legend>
           <input
             type="file"
             accept=".spc,.sp2"
@@ -36,7 +36,7 @@ export default function AnalyzePanel() {
               app.selectFile(event.currentTarget.files?.[0] ?? null);
             }}
           />
-        </label>
+        </fieldset>
 
         <div class="grid gap-3">
           <label class="flex cursor-pointer items-start gap-3 rounded-3xl border border-base-300/80 bg-base-200/40 px-4 py-4">

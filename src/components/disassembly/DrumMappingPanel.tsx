@@ -14,8 +14,8 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
   return (
     <div class="space-y-4 rounded-[1.5rem] border border-base-300/80 bg-base-200/45 p-4">
       <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
-        <label class="form-control gap-2">
-          <span class="label-text font-semibold text-base-content">Default drum sound</span>
+        <fieldset class="fieldset gap-2">
+          <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">Default drum sound</legend>
           <select
             class="select select-bordered w-full"
             value={String(currentMapping().drumNote)}
@@ -29,7 +29,7 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
               )}
             </For>
           </select>
-        </label>
+        </fieldset>
 
         <button
           class="btn btn-secondary"
@@ -67,8 +67,10 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
                       Triggered {pitchUsage.noteCount} times
                     </div>
                   </div>
-                  <label class="form-control gap-2">
-                    <span class="label-text font-semibold text-base-content">Channel 10 drum key</span>
+                  <fieldset class="fieldset gap-2">
+                    <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">
+                      Channel 10 drum key
+                    </legend>
                     <select
                       class="select select-bordered w-full"
                       value={String(app.getDrumPitchSelection(props.usage, pitchUsage.sourcePitch))}
@@ -88,7 +90,7 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
                         )}
                       </For>
                     </select>
-                  </label>
+                  </fieldset>
                 </div>
               )}
             </For>

@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@plugin "@tailwindcss/forms";
+@plugin "@tailwindcss/typography";
+@plugin "daisyui" {
+  themes: false;
+}
+@plugin "daisyui/theme" {
+  name: "disamk";
+  default: true;
+  prefersdark: false;
+  color-scheme: light;
+  --color-primary: #b2456a;
+  --color-primary-content: #fff8fb;
+  --color-secondary: #4b7597;
+  --color-secondary-content: #f6fbff;
+  --color-accent: #d98752;
+  --color-accent-content: #fff7f1;
+  --color-neutral: #2d1f27;
+  --color-neutral-content: #fff7fb;
+  --color-base-100: #fffaf8;
+  --color-base-200: #f7ece8;
+  --color-base-300: #e8d5ce;
+  --color-base-content: #2f2228;
+  --color-info: #4c8dd9;
+  --color-info-content: #eff7ff;
+  --color-success: #4c8963;
+  --color-success-content: #f4fcf7;
+  --color-warning: #d17b34;
+  --color-warning-content: #fff8f0;
+  --color-error: #c9545d;
+  --color-error-content: #fff6f7;
+  --radius-box: 1.5rem;
+  --radius-selector: 1rem;
+  --radius-field: 1rem;
+  --size-selector: 0.25rem;
+  --size-field: 0.25rem;
+  --border: 1px;
+  --depth: 1;
+  --noise: 0;
+}
+
+@theme {
+  --font-sans: "Space Grotesk", "Microsoft YaHei", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+  --shadow-soft: 0 24px 70px -32px rgba(71, 39, 53, 0.38);
+}
+
+@layer components {
+  .surface-card {
+    @apply border border-base-300 bg-base-100 shadow-soft backdrop-blur-xl;
+  }
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+:root {
+  color: #2a1d25;
+  background-color: #fff8f5;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top left, rgba(214, 110, 146, 0.24), transparent 30%),
+    radial-gradient(circle at 80% 20%, rgba(80, 124, 168, 0.18), transparent 28%),
+    linear-gradient(180deg, #fff9f7 0%, #fff2ee 52%, #f8ebe6 100%);
+  color: var(--color-base-content);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(95, 78, 91, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(95, 78, 91, 0.05) 1px, transparent 1px);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(circle at center, black 35%, transparent 100%);
+}
+
+::selection {
+  background: rgba(178, 69, 106, 0.18);
+}
+
+code,
+pre,
+.font-mono {
+  font-feature-settings: "liga" 0;
+}
