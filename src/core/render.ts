@@ -1,4 +1,5 @@
-import jsmidgen, { MidiChannel } from "jsmidgen";
+import jsmidgen from "jsmidgen";
+import { getRenderedSourcePitch } from "./generalMidi";
 import MIDIRenderer from "./renderMIDI";
 import { MMLRenderer } from "./renderMML";
 import {
@@ -16,9 +17,24 @@ function getOrCreateInstrumentUsage(usageMap: Map<number, InstrumentUsage>, inst
       channels: [],
       noteCount: 0,
       switchCount: 0,
+      sourcePitches: [],
     });
   }
   return usageMap.get(instrument) as InstrumentUsage;
+}
+
+function markInstrumentPitch(usage: InstrumentUsage, sourcePitch: number) {
+  const pitchUsage = usage.sourcePitches.find(entry => entry.sourcePitch === sourcePitch);
+  if (pitchUsage === undefined) {
+    usage.sourcePitches.push({
+      sourcePitch,
+      noteCount: 1,
+    });
+    usage.sourcePitches.sort((left, right) => left.sourcePitch - right.sourcePitch);
+    return;
+  }
+
+  pitchUsage.noteCount += 1;
 }
 
 function markInstrumentSwitch(usageMap: Map<number, InstrumentUsage>, sourceChannel: number, instrument: number) {
@@ -30,13 +46,19 @@ function markInstrumentSwitch(usageMap: Map<number, InstrumentUsage>, sourceChan
   usage.switchCount += 1;
 }
 
-function markInstrumentNote(usageMap: Map<number, InstrumentUsage>, sourceChannel: number, instrument: number) {
+function markInstrumentNote(
+  usageMap: Map<number, InstrumentUsage>,
+  sourceChannel: number,
+  instrument: number,
+  sourcePitch: number,
+) {
   const usage = getOrCreateInstrumentUsage(usageMap, instrument);
   if (!usage.channels.includes(sourceChannel)) {
     usage.channels.push(sourceChannel);
     usage.channels.sort((left, right) => left - right);
   }
   usage.noteCount += 1;
+  markInstrumentPitch(usage, sourcePitch);
 }
 
 function collectInstrumentUsage(
@@ -55,13 +77,18 @@ function collectInstrumentUsage(
         break;
       }
       case opcode >= 0x80 && opcode <= 0xc5: {
-        markInstrumentNote(usageMap, sourceChannel, currentInstrument);
+        markInstrumentNote(
+          usageMap,
+          sourceChannel,
+          currentInstrument,
+          getRenderedSourcePitch(opcode - 0x80, currentInstrument),
+        );
         break;
       }
       case opcode >= 0xd0 && opcode <= 0xd9: {
         currentInstrument = opcode - 0xd0 + 21;
         markInstrumentSwitch(usageMap, sourceChannel, currentInstrument);
-        markInstrumentNote(usageMap, sourceChannel, currentInstrument);
+        markInstrumentNote(usageMap, sourceChannel, currentInstrument, 60);
         break;
       }
       default: {

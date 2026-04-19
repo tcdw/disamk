@@ -1,8 +1,14 @@
 import JSZip from "jszip";
 import { For, Show, createSignal } from "solid-js";
 import { buildMappedMIDI, Parsed } from "./core/parse";
-import { GENERAL_MIDI_INSTRUMENTS, clampGeneralMidiProgram, createDefaultMappingTable } from "./core/generalMidi";
-import { InstrumentMappingMode, InstrumentMappingTable } from "./core/renderTypes";
+import {
+  GENERAL_MIDI_INSTRUMENTS,
+  GENERAL_MIDI_PERCUSSION_NOTES,
+  createDefaultInstrumentMapping,
+  createDefaultMappingTable,
+  formatMidiNoteLabel,
+} from "./core/generalMidi";
+import { InstrumentMappingMode, InstrumentMappingTable, InstrumentUsage } from "./core/renderTypes";
 import parse from "./core/parse";
 
 function bytesToUint8Array(data: (string | number)[]) {
@@ -67,12 +73,35 @@ export default function App() {
     }));
   };
 
-  const getCurrentMapping = (instrument: number) =>
-    mappingTable()[instrument] ?? {
-      instrument,
-      mode: "gm" as const,
-      gmProgram: clampGeneralMidiProgram(instrument),
-    };
+  const getCurrentMapping = (usage: InstrumentUsage) =>
+    mappingTable()[usage.instrument] ?? createDefaultInstrumentMapping(usage);
+
+  const updateDrumPitchMapping = (usage: InstrumentUsage, sourcePitch: number, drumNote: number) => {
+    const currentMapping = getCurrentMapping(usage);
+    updateMapping(usage.instrument, {
+      drumNoteByPitch: {
+        ...currentMapping.drumNoteByPitch,
+        [sourcePitch]: drumNote,
+      },
+    });
+  };
+
+  const applyDrumNoteToAllPitches = (usage: InstrumentUsage) => {
+    const currentMapping = getCurrentMapping(usage);
+    const drumNoteByPitch = usage.sourcePitches.reduce<Record<number, number>>((pitchMapping, pitchUsage) => {
+      pitchMapping[pitchUsage.sourcePitch] = currentMapping.drumNote;
+      return pitchMapping;
+    }, {});
+
+    updateMapping(usage.instrument, {
+      drumNoteByPitch,
+    });
+  };
+
+  const getDrumPitchSelection = (usage: InstrumentUsage, sourcePitch: number) => {
+    const currentMapping = getCurrentMapping(usage);
+    return currentMapping.drumNoteByPitch[sourcePitch] ?? currentMapping.drumNote;
+  };
 
   const analyzeFile = async (event: SubmitEvent) => {
     event.preventDefault();
@@ -283,7 +312,8 @@ export default function App() {
                     </p>
                   </div>
                   <div class="rounded-3xl border border-secondary/20 bg-secondary/10 px-4 py-3 text-sm text-secondary">
-                    Drum mappings keep the converted MIDI note numbers exactly as rendered.
+                    Drum mappings now follow the GM channel 10 key map, and you can override the target drum sound for
+                    every source pitch.
                   </div>
                 </div>
 
@@ -313,7 +343,7 @@ export default function App() {
                 <div class="mt-6 grid gap-4">
                   <For each={parsedResult().midiData.instrumentUsages}>
                     {usage => {
-                      const currentMapping = () => getCurrentMapping(usage.instrument);
+                      const currentMapping = () => getCurrentMapping(usage);
 
                       return (
                         <article class="rounded-[1.75rem] border border-base-300/80 bg-base-100/80 p-4 shadow-sm md:p-5">
@@ -326,6 +356,9 @@ export default function App() {
                                 <div class="badge badge-outline badge-lg gap-2 px-4 py-3">Notes {usage.noteCount}</div>
                                 <div class="badge badge-outline badge-lg gap-2 px-4 py-3">
                                   Switches {usage.switchCount}
+                                </div>
+                                <div class="badge badge-outline badge-lg gap-2 px-4 py-3">
+                                  Pitches {usage.sourcePitches.length}
                                 </div>
                               </div>
                               <div>
@@ -361,11 +394,110 @@ export default function App() {
                               <Show
                                 when={currentMapping().mode === "gm"}
                                 fallback={
-                                  <div class="rounded-2xl border border-dashed border-base-300 bg-base-200/50 px-4 py-3 text-sm leading-6 text-base-content/60">
-                                    {currentMapping().mode === "drums"
-                                      ? "Notes will be sent to the dedicated drum track for this source channel on MIDI channel 10."
-                                      : "This source instrument will be omitted from the MIDI export while MML and samples stay untouched."}
-                                  </div>
+                                  <Show
+                                    when={currentMapping().mode === "drums"}
+                                    fallback={
+                                      <div class="rounded-2xl border border-dashed border-base-300 bg-base-200/50 px-4 py-3 text-sm leading-6 text-base-content/60">
+                                        This source instrument will be omitted from the MIDI export while MML and
+                                        samples stay untouched.
+                                      </div>
+                                    }
+                                  >
+                                    <div class="space-y-4 rounded-[1.5rem] border border-base-300/80 bg-base-200/45 p-4">
+                                      <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+                                        <label class="form-control gap-2">
+                                          <span class="label-text font-semibold text-base-content">
+                                            Default drum sound
+                                          </span>
+                                          <select
+                                            class="select select-bordered w-full"
+                                            value={String(currentMapping().drumNote)}
+                                            onChange={event =>
+                                              updateMapping(usage.instrument, {
+                                                drumNote: Number(event.currentTarget.value),
+                                              })
+                                            }
+                                          >
+                                            <For each={GENERAL_MIDI_PERCUSSION_NOTES}>
+                                              {drumNote => (
+                                                <option value={drumNote.note}>
+                                                  {`${drumNote.note} / ${drumNote.noteName} - ${drumNote.sound}`}
+                                                </option>
+                                              )}
+                                            </For>
+                                          </select>
+                                        </label>
+
+                                        <button
+                                          class="btn btn-secondary"
+                                          type="button"
+                                          disabled={usage.sourcePitches.length === 0}
+                                          onClick={() => applyDrumNoteToAllPitches(usage)}
+                                        >
+                                          Apply default to all pitches
+                                        </button>
+                                      </div>
+
+                                      <Show
+                                        when={usage.sourcePitches.length > 0}
+                                        fallback={
+                                          <div class="rounded-2xl border border-dashed border-base-300 bg-base-100/70 px-4 py-3 text-sm leading-6 text-base-content/60">
+                                            No played pitches were detected for this instrument, so there is nothing to
+                                            remap yet.
+                                          </div>
+                                        }
+                                      >
+                                        <div class="space-y-3">
+                                          <div class="text-sm font-semibold uppercase tracking-[0.2em] text-base-content/45">
+                                            Per-pitch drum routing
+                                          </div>
+                                          <div class="grid gap-3">
+                                            <For each={usage.sourcePitches}>
+                                              {pitchUsage => (
+                                                <div class="grid gap-3 rounded-2xl border border-base-300/80 bg-base-100/80 px-4 py-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)] lg:items-center">
+                                                  <div class="space-y-1">
+                                                    <div class="text-sm font-semibold text-base-content">
+                                                      {formatMidiNoteLabel(pitchUsage.sourcePitch)} / MIDI{" "}
+                                                      {pitchUsage.sourcePitch}
+                                                    </div>
+                                                    <div class="text-xs uppercase tracking-[0.2em] text-base-content/45">
+                                                      Triggered {pitchUsage.noteCount} times
+                                                    </div>
+                                                  </div>
+                                                  <label class="form-control gap-2">
+                                                    <span class="label-text font-semibold text-base-content">
+                                                      Channel 10 drum key
+                                                    </span>
+                                                    <select
+                                                      class="select select-bordered w-full"
+                                                      value={String(
+                                                        getDrumPitchSelection(usage, pitchUsage.sourcePitch),
+                                                      )}
+                                                      onChange={event =>
+                                                        updateDrumPitchMapping(
+                                                          usage,
+                                                          pitchUsage.sourcePitch,
+                                                          Number(event.currentTarget.value),
+                                                        )
+                                                      }
+                                                    >
+                                                      <For each={GENERAL_MIDI_PERCUSSION_NOTES}>
+                                                        {drumNote => (
+                                                          <option value={drumNote.note}>
+                                                            {`${drumNote.note} / ${drumNote.noteName} - ${drumNote.sound}`}
+                                                          </option>
+                                                        )}
+                                                      </For>
+                                                    </select>
+                                                  </label>
+                                                </div>
+                                              )}
+                                            </For>
+                                          </div>
+                                        </div>
+                                      </Show>
+                                    </div>
+                                  </Show>
                                 }
                               >
                                 <label class="form-control gap-2">
@@ -441,8 +573,8 @@ export default function App() {
                     <div class="text-sm font-semibold uppercase tracking-[0.24em] text-base-content/50">Notes</div>
                     <ul class="space-y-3 text-sm leading-6 text-base-content/70">
                       <li>
-                        Mapping to channel 10 drums only changes the destination track and MIDI channel, so you can
-                        shape the drum layout by editing notes later if you want.
+                        The GM percussion list follows the General MIDI channel 10 key map you shared, so every drum
+                        destination is now an explicit key instead of a blind carry-over.
                       </li>
                       <li>
                         Source channels keep their timing and controller data, which means volume automation still

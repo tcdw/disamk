@@ -1,9 +1,12 @@
 /* eslint-disable no-bitwise */
 import jsmidgen, { MidiChannel, MidiParameterValue } from "jsmidgen";
-import { GM_DRUM_CHANNEL, clampGeneralMidiProgram } from "./generalMidi";
+import {
+  GM_DRUM_CHANNEL,
+  clampGeneralMidiDrumNote,
+  clampGeneralMidiProgram,
+  getRenderedSourcePitch,
+} from "./generalMidi";
 import { InstrumentMappingTable, MIDIRenderOptions } from "./renderTypes";
-
-const transportSMWInstrument = [0, 0, 5, 0, 0, 0, 0, 0, 0, -5, 6, 0, -5, 0, 0, 8, 0, 0, 0];
 
 interface MIDIRendererOptions {
   velocityTable: Uint8Array[];
@@ -101,8 +104,11 @@ export default class MIDIRenderer {
     return this.clampMidiValue((table[noteParam & 0xf] / 255) * 127);
   }
 
-  private getRenderedNote(note: number, instrument: number) {
-    return this.clampMidiValue(note + 12 + (transportSMWInstrument[instrument] ?? 0));
+  private getMappedDrumNote(mappingTable: InstrumentMappingTable, instrument: number, sourcePitch: number) {
+    const mapping = this.resolveMapping(mappingTable, instrument);
+    return this.clampMidiValue(
+      mapping.drumNoteByPitch[sourcePitch] ?? mapping.drumNote ?? clampGeneralMidiDrumNote(sourcePitch),
+    );
   }
 
   renderMIDI(subOptions: MIDIRenderOptions): void {
@@ -173,11 +179,12 @@ export default class MIDIRenderer {
         }
         case h >= 0x80 && h <= 0xc5: {
           stopActiveNote();
+          const sourcePitch = getRenderedSourcePitch(h - 0x80, currentInstrument);
 
           if (mapping.mode === "gm") {
-            startNote("melody", this.getRenderedNote(h - 0x80, currentInstrument));
+            startNote("melody", this.clampMidiValue(sourcePitch));
           } else if (mapping.mode === "drums") {
-            startNote("drums", this.getRenderedNote(h - 0x80, currentInstrument));
+            startNote("drums", this.getMappedDrumNote(mappingTable, currentInstrument, sourcePitch));
           }
 
           currentTime += currentNoteLength;
@@ -195,11 +202,12 @@ export default class MIDIRenderer {
         case h >= 0xd0 && h <= 0xd9: {
           currentInstrument = h - 0xd0 + 21;
           stopActiveNote();
+          const sourcePitch = 60;
 
           if (this.resolveMapping(mappingTable, currentInstrument).mode === "gm") {
-            startNote("melody", 60);
+            startNote("melody", sourcePitch);
           } else if (this.resolveMapping(mappingTable, currentInstrument).mode === "drums") {
-            startNote("drums", 60);
+            startNote("drums", this.getMappedDrumNote(mappingTable, currentInstrument, sourcePitch));
           }
 
           currentTime += currentNoteLength;

@@ -44,11 +44,17 @@ export interface SourceChannelRender {
   flattenedSequence: number[][];
 }
 
+export interface InstrumentPitchUsage {
+  sourcePitch: number;
+  noteCount: number;
+}
+
 export interface InstrumentUsage {
   instrument: number;
   channels: number[];
   noteCount: number;
   switchCount: number;
+  sourcePitches: InstrumentPitchUsage[];
 }
 
 export type InstrumentMappingMode = "gm" | "drums" | "skip";
@@ -57,6 +63,8 @@ export interface InstrumentMapping {
   instrument: number;
   mode: InstrumentMappingMode;
   gmProgram: number;
+  drumNote: number;
+  drumNoteByPitch: Record<number, number>;
 }
 
 export type InstrumentMappingTable = Record<number, InstrumentMapping>;
