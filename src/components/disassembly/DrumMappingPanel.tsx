@@ -12,7 +12,7 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
   const currentMapping = () => app.getCurrentMapping(props.usage);
 
   return (
-    <div class="space-y-4 rounded-[1.5rem] border border-base-300/80 bg-base-200/45 p-4">
+    <div class="space-y-4 rounded-3xl bg-base-200/45 p-4 md:p-5">
       <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
         <fieldset class="fieldset gap-2">
           <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">Default drum sound</legend>
@@ -46,7 +46,7 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
       <Show
         when={props.usage.sourcePitches.length > 0}
         fallback={
-          <div class="rounded-2xl border border-dashed border-base-300 bg-base-100/70 px-4 py-3 text-sm leading-6 text-base-content/60">
+          <div class="surface-card-subtle border-dashed px-4 py-3 text-sm leading-7 text-base-content/60">
             No played pitches were detected for this instrument, so there is nothing to remap yet.
           </div>
         }
@@ -58,7 +58,7 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
           <div class="grid gap-3">
             <For each={props.usage.sourcePitches}>
               {pitchUsage => (
-                <div class="grid gap-3 rounded-2xl border border-base-300/80 bg-base-100/80 px-4 py-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)] lg:items-center">
+                <div class="surface-card-subtle grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)] lg:items-center">
                   <div class="space-y-1">
                     <div class="text-sm font-semibold text-base-content">
                       {formatMidiNoteLabel(pitchUsage.sourcePitch)} / MIDI {pitchUsage.sourcePitch}

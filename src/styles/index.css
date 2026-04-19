@@ -41,6 +41,18 @@ body {
   background-color: var(--color-accent-100);
 }
 
+.surface-card {
+  @apply rounded-4xl bg-white/60 dark:bg-gray-950/60;
+}
+
+.surface-card-inner {
+  @apply rounded-[1.75rem] bg-base-100/90;
+}
+
+.surface-card-subtle {
+  @apply rounded-[1.5rem] border border-base-300/70 bg-base-100/72;
+}
+
 @media (prefers-color-scheme: dark) {
   .prose a:hover {
     border-color: var(--color-accent-700);
