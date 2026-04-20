@@ -14,7 +14,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  NODE_VERSION: "24"
   RUBY_VERSION: "3.3"
   NEOCITIES_SITE_DIR: disamk_web
 
@@ -28,8 +27,6 @@ jobs:
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
-        with:
-          version: 9
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
