@@ -17,21 +17,21 @@ export default function InstrumentMappingCard(props: InstrumentMappingCardProps)
       <div class="flex flex-col gap-4">
         <div class="space-y-4">
           <div class="flex flex-wrap items-center gap-3">
-            <div class="badge badge-primary badge-lg gap-2 px-3 py-3 font-mono">@{props.usage.instrument}</div>
-            <div class="badge badge-soft badge-lg gap-2 px-3 py-3">{props.usage.noteCount} Notes</div>
+            <div class="badge badge-primary badge-lg gap-2 px-2 py-3 font-mono">@{props.usage.instrument}</div>
+            <div class="badge badge-soft badge-lg gap-2 px-2 py-3">{props.usage.noteCount} Notes</div>
           </div>
-          <div>
-            <div class="text-sm font-semibold">Seen on source channels</div>
-            <div class="mt-2 flex flex-wrap gap-2">
+          <div class="inline-flex items-center gap-2">
+            <div class="text-sm font-semibold">Seen on source channels:</div>
+            <div class="flex flex-wrap gap-2">
               <For each={props.usage.channels}>
-                {channel => <span class="badge badge-ghost gap-2 px-3 py-3">#{channel}</span>}
+                {channel => <span class="badge badge-ghost gap-2 px-2 py-3 font-mono">#{channel}</span>}
               </For>
             </div>
           </div>
         </div>
 
-        <div class="grid w-full gap-4 xl:max-w-xl xl:grid-cols-[minmax(200px,220px)_minmax(0,1fr)]">
-          <fieldset class="fieldset gap-2">
+        <div class="flex flex-col w-full gap-4">
+          <fieldset class="fieldset gap-2 max-w-xs">
             <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">Output mode</legend>
             <select
               class="select select-bordered w-full"
@@ -48,7 +48,7 @@ export default function InstrumentMappingCard(props: InstrumentMappingCardProps)
 
           <Switch>
             <Match when={currentMapping().mode === "gm"}>
-              <fieldset class="fieldset gap-2">
+              <fieldset class="fieldset gap-2 max-w-xs">
                 <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">GM program</legend>
                 <select
                   class="select select-bordered w-full"

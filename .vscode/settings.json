@@ -1,0 +1,9 @@
+{
+  "tailwindCSS.experimental.classRegex": [
+    ["const\\s+\\w*ClassName\\s*=\\s*['\"`]([^'\"`]*)['\"`]", "([^'\"`]*)"],
+    ["const\\s+\\w*_CLASSNAME\\s*=\\s*['\"`]([^'\"`]*)['\"`]", "([^'\"`]*)"]
+  ],
+  "editor.quickSuggestions": {
+    "strings": true
+  }
+}

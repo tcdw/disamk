@@ -13,34 +13,35 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
 
   return (
     <div class="space-y-4 rounded-3xl bg-base-200/45 p-4 md:p-5">
-      <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+      <div class="flex flex-col gap-3">
         <fieldset class="fieldset gap-2">
           <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">Default drum sound</legend>
-          <select
-            class="select select-bordered w-full"
-            value={String(currentMapping().drumNote)}
-            onChange={event => {
-              app.setInstrumentDrumDefault(props.usage, Number(event.currentTarget.value));
-            }}
-          >
-            <For each={GENERAL_MIDI_PERCUSSION_NOTES}>
-              {drumNote => (
-                <option value={drumNote.note}>{`${drumNote.note} / ${drumNote.noteName} - ${drumNote.sound}`}</option>
-              )}
-            </For>
-          </select>
+          <div class="flex items-center gap-4">
+            <select
+              class="select select-bordered w-full"
+              value={String(currentMapping().drumNote)}
+              onChange={event => {
+                app.setInstrumentDrumDefault(props.usage, Number(event.currentTarget.value));
+              }}
+            >
+              <For each={GENERAL_MIDI_PERCUSSION_NOTES}>
+                {drumNote => (
+                  <option value={drumNote.note}>{`${drumNote.note} / ${drumNote.noteName} - ${drumNote.sound}`}</option>
+                )}
+              </For>
+            </select>
+            <button
+              class="btn btn-accent"
+              type="button"
+              disabled={props.usage.sourcePitches.length === 0}
+              onClick={() => {
+                app.applyDrumNoteToAllPitches(props.usage);
+              }}
+            >
+              Apply default to all pitches
+            </button>
+          </div>
         </fieldset>
-
-        <button
-          class="btn btn-secondary"
-          type="button"
-          disabled={props.usage.sourcePitches.length === 0}
-          onClick={() => {
-            app.applyDrumNoteToAllPitches(props.usage);
-          }}
-        >
-          Apply default to all pitches
-        </button>
       </div>
 
       <Show
@@ -52,20 +53,16 @@ export default function DrumMappingPanel(props: DrumMappingPanelProps) {
         }
       >
         <div class="space-y-3">
-          <div class="text-sm font-semibold uppercase tracking-[0.2em] text-base-content/45">
-            Per-pitch drum routing
-          </div>
-          <div class="grid gap-3">
+          <div class="text-sm font-semibold">Per-pitch drum routing</div>
+          <div class="flex flex-col gap-3">
             <For each={props.usage.sourcePitches}>
               {pitchUsage => (
                 <div class="surface-card-subtle grid gap-3 px-4 py-4 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)] lg:items-center">
                   <div class="space-y-1">
-                    <div class="text-sm font-semibold text-base-content">
+                    <div class="text-base font-semibold text-base-content">
                       {formatMidiNoteLabel(pitchUsage.sourcePitch)} / MIDI {pitchUsage.sourcePitch}
                     </div>
-                    <div class="text-xs uppercase tracking-[0.2em] text-base-content/45">
-                      Triggered {pitchUsage.noteCount} times
-                    </div>
+                    <div class="text-sm opacity-50">Triggered {pitchUsage.noteCount} times</div>
                   </div>
                   <fieldset class="fieldset gap-2">
                     <legend class="fieldset-legend px-0 text-sm font-semibold text-base-content">

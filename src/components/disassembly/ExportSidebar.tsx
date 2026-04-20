@@ -1,3 +1,4 @@
+import { PROSE_CLASSNAME } from "../../constants/class-names";
 import { useDisassemblyContext } from "./DisassemblyContext";
 
 export default function ExportSidebar() {
@@ -10,7 +11,7 @@ export default function ExportSidebar() {
           <h3 class="text-xl font-bold tracking-tight text-base-content md:text-2xl">
             {app.selectedFile()?.name ?? "Current SPC export"}
           </h3>
-          <p class="text-base leading-8 text-base-content/68">
+          <p class={PROSE_CLASSNAME}>
             The resulting MIDI file uses 16 tracks total: 8 melodic tracks on MIDI channels 1-8 plus 8 drum tracks all
             assigned to MIDI channel 10.
           </p>

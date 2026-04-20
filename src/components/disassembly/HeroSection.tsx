@@ -1,3 +1,4 @@
+import { PROSE_CLASSNAME } from "../../constants/class-names";
 import AnalyzePanel from "./AnalyzePanel";
 
 export default function HeroSection() {
@@ -9,9 +10,13 @@ export default function HeroSection() {
             <h1 class="max-w-3xl text-3xl font-bold tracking-tight text-base-content md:text-4xl leading-tight">
               AddmusicK 1.0.x SPC Disassembler
             </h1>
-            <div class="mt-6 prose md:prose-lg prose-slate dark:prose-invert max-w-none prose-a:no-underline prose-a:border-accent-200 dark:prose-a:border-accent-900 prose-a:border-b-2 prose-a:border-dashed prose-a:text-accent-500 dark:prose-a:text-accent-400 prose-a:transition-colors prose-img:rounded-lg prose-thead:border-b-2 prose-th:text-base prose-th:leading-8 prose-td:text-base prose-td:leading-8 prose-li:my-0.5">
-              <p>You can convert your AddMusicK 1.0.X SPC back into MML, BRR samples and MIDI file.</p>
-              <p>Select your SPC file and press Start...</p>
+            <div class={PROSE_CLASSNAME}>
+              <p>You can convert your AddMusicK 1.0.X SPC back into MML, BRR samples and a mapped MIDI file.</p>
+              <p>
+                Select your SPC file, analyze it, then choose how each detected source instrument should be exported.
+                You can map instruments to General MIDI programs, route them to channel 10 drums, and fine-tune drum
+                keys per source pitch before downloading the ZIP.
+              </p>
               <p>
                 <b>Only unmodified versions of AddMusicK 1.0.0 ~ 1.0.9 SPC is guaranteed to be supported.</b> For
                 AddMusic 4.05/M/etc SPC, use{` `}
